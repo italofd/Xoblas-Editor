@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from scipy import constants
+from routers import ping
 import pandas
 
 mydataset = {
@@ -11,6 +12,7 @@ mydataset = {
 
 app = FastAPI()
 
+app.include_router(ping.router)
 
 @app.get("/")
 async def root():
