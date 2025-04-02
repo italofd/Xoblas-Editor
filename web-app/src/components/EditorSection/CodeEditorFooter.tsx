@@ -7,7 +7,7 @@ const onExecutePythonCode = async (
 	setExecutionResponse: SetExecutionResponse,
 	code: string
 ) => {
-	const { code_output } = await executePythonCode(apiClient, code || "");
+	const { code_output } = await executePythonCode(apiClient, code);
 
 	if (code_output) setExecutionResponse(code_output);
 };
