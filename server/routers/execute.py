@@ -3,7 +3,6 @@ import io
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-
 router = APIRouter()
 
 class ExecuteReqBody(BaseModel):
@@ -30,6 +29,7 @@ class ErrorExecuteResponse(BaseExecuteResponse):
     },
     400: {
         "description": "Your code has failed to execute due to malformed code or malicious activity",
+        "model": ErrorExecuteResponse
     }
 })
 
@@ -43,16 +43,20 @@ async def execute(body: ExecuteReqBody):
     sys.stdout = buffer
 
     output: str = None
+
     try:
+        compiled = compile(code, "<string>", "exec")
+
         #This is not meant for product yet
         #We are not applying any rules or limits to the process that we are executing
         #Run this in a safe env when pushing to prod =)
-        exec(code, {}, {})
+        exec(compiled, {}, {})
 
         sys.stdout = original_stdout
+
         output = buffer.getvalue()
-    except:
-        raise HTTPException(status_code=400)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     if (output):
         return {
