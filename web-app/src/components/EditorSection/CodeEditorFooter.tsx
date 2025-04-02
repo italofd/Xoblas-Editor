@@ -1,16 +1,7 @@
 "use client";
-import { apiClient } from "@/api/client";
-import { executePythonCode } from "@/functions/execute";
+
+import { onExecutePythonCode } from "@/functions/handlers/onExecutePythonCode";
 import { PythonCodeDTO, SetExecutionResponse } from "@/types/api";
-
-const onExecutePythonCode = async (
-	setExecutionResponse: SetExecutionResponse,
-	code: string
-) => {
-	const { code_output } = await executePythonCode(apiClient, code);
-
-	if (code_output) setExecutionResponse(code_output);
-};
 
 export const CodeEditorFooter = ({
 	code,

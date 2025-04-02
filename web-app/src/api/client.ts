@@ -32,7 +32,7 @@ export const apiClient = (baseUrl: string = API_BASE_URL) => {
 
 			return response.data;
 		} catch (error) {
-			throw new Error(`Failed to post data: ${error}`);
+			throw error;
 		}
 	};
 
