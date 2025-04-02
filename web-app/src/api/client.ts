@@ -11,6 +11,7 @@ export const apiClient = (baseUrl: string = API_BASE_URL) => {
 				`${baseUrl}${url}`,
 				config
 			);
+
 			return response.data;
 		} catch (error) {
 			throw new Error(`Failed to fetch data: ${error}`);
@@ -28,6 +29,7 @@ export const apiClient = (baseUrl: string = API_BASE_URL) => {
 				data,
 				config
 			);
+
 			return response.data;
 		} catch (error) {
 			throw new Error(`Failed to post data: ${error}`);

@@ -3,9 +3,11 @@ import { useState } from "react";
 
 import { CodeEditorFooter } from "@/components/EditorSection/CodeEditorFooter";
 import { CodeEditor } from "@/components/EditorSection/CodeEditor";
+import { DEFAULT_PYTHON_CODE } from "@/constants/editor";
+import { PythonCodeDTO } from "@/types/api";
 
 export const CodeEditorMainSection = () => {
-	const [code, setCode] = useState<null | string>(null);
+	const [code, setCode] = useState<PythonCodeDTO>(DEFAULT_PYTHON_CODE);
 
 	const [executionResponse, setExecutionResponse] = useState<null | string>(
 		null
@@ -15,7 +17,7 @@ export const CodeEditorMainSection = () => {
 		<>
 			<div className="flex gap-8">
 				<CodeEditor onChange={(code) => code && setCode(code)} code="python" />
-				<div className="border-2 border-gray-300 w-full p-2">
+				<div className="border-2 border-gray-300 w-[30%] p-2">
 					<p className="text-2xl">{executionResponse}</p>
 				</div>
 			</div>

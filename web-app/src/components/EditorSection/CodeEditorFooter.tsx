@@ -1,30 +1,31 @@
 "use client";
 import { apiClient } from "@/api/client";
 import { executePythonCode } from "@/functions/execute";
-import { Dispatch, SetStateAction } from "react";
+import { PythonCodeDTO, SetExecutionResponse } from "@/types/api";
 
-//[TO-DO]: Code type must be shared with all functions
+const onExecutePythonCode = async (
+	setExecutionResponse: SetExecutionResponse,
+	code: string
+) => {
+	const { code_output } = await executePythonCode(apiClient, code || "");
+
+	if (code_output) setExecutionResponse(code_output);
+};
+
 export const CodeEditorFooter = ({
 	code,
 	setExecutionResponse,
 }: {
-	code: string | null;
-	//[TO-DO]: Improve this type
-	setExecutionResponse: Dispatch<SetStateAction<string | null>>;
+	code: PythonCodeDTO;
+	setExecutionResponse: SetExecutionResponse;
 }) => {
 	return (
 		<>
 			<button
 				className="px-6 py-2 bg-gradient-to-r font-bold from-blue-500 to-indigo-600 text-white rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-				onClick={async () => {
-					//[TO-DO]: Handle in a separated fn
-					const { code_output } = await executePythonCode(
-						apiClient,
-						code || ""
-					);
-
-					if (code_output) setExecutionResponse(code_output);
-				}}
+				onClick={async () =>
+					code && onExecutePythonCode(setExecutionResponse, code)
+				}
 			>
 				Run your code
 			</button>

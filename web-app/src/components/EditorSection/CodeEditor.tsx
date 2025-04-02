@@ -1,4 +1,5 @@
 "use client";
+import { DEFAULT_PYTHON_CODE } from "@/constants/editor";
 import { Editor, OnChange } from "@monaco-editor/react";
 
 /**
@@ -16,7 +17,7 @@ export const CodeEditor = ({
 			height="500px"
 			width="80%"
 			defaultLanguage="python"
-			defaultValue={'def main():\n    print("Hello, world!")\n\nmain()'}
+			defaultValue={DEFAULT_PYTHON_CODE}
 			//[TO-DO]: Implement a debouncer, this will not work and its just to see how things is going =)
 			onChange={onChange}
 			theme="vs-dark"
