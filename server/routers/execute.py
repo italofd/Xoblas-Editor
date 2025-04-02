@@ -46,6 +46,8 @@ async def execute(body: ExecuteReqBody):
 
     output: str = None
 
+    #That way is NOT the most productive, if a user tries to use a "random" or other std packages
+    #It will fail due to not being declared below at the globals accessible variables
     available_globals = {"pandas": pandas, "scipy": scipy} 
 
     try:
@@ -60,7 +62,7 @@ async def execute(body: ExecuteReqBody):
 
         output = buffer.getvalue()
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail={"error": str(e)})
 
     if (output):
         return {
