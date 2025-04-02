@@ -2,6 +2,8 @@ import sys
 import io
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+import pandas
+import scipy
 
 router = APIRouter()
 
@@ -44,13 +46,15 @@ async def execute(body: ExecuteReqBody):
 
     output: str = None
 
+    available_globals = {"pandas": pandas, "scipy": scipy} 
+
     try:
         compiled = compile(code, "<string>", "exec")
 
         #This is not meant for product yet
         #We are not applying any rules or limits to the process that we are executing
         #Run this in a safe env when pushing to prod =)
-        exec(compiled, {}, {})
+        exec(compiled, available_globals, {})
 
         sys.stdout = original_stdout
 
