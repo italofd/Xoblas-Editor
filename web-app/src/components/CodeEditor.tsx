@@ -2,20 +2,16 @@
 import { Editor } from "@monaco-editor/react";
 import { useRef } from "react";
 
+/**
+ * This is only client side since monaco-react is not adapted fully to server components
+ */
 export const CodeEditor = ({ code = "py", onChange = () => {} }) => {
-	const editorRef = useRef(null);
-
-	const handleEditorDidMount = (editor, monaco) => {
-		editorRef.current = editor;
-	};
-
 	return (
 		<Editor
 			height="500px"
 			defaultLanguage="python"
 			defaultValue={'def main():\n    print("Hello, world!")\n\nmain()'}
 			onChange={onChange}
-			onMount={handleEditorDidMount}
 			theme="vs-dark"
 			options={{
 				minimap: { enabled: false },
