@@ -1,16 +1,23 @@
 "use client";
-import { Editor } from "@monaco-editor/react";
-import { useRef } from "react";
+import { Editor, OnChange } from "@monaco-editor/react";
 
 /**
  * This is only client side since monaco-react is not adapted fully to server components
  */
-export const CodeEditor = ({ code = "py", onChange = () => {} }) => {
+export const CodeEditor = ({
+	code = "py",
+	onChange = () => {},
+}: {
+	code: string;
+	onChange: OnChange;
+}) => {
 	return (
 		<Editor
 			height="500px"
+			width="80%"
 			defaultLanguage="python"
 			defaultValue={'def main():\n    print("Hello, world!")\n\nmain()'}
+			//[TO-DO]: Implement a debouncer, this will not work and its just to see how things is going =)
 			onChange={onChange}
 			theme="vs-dark"
 			options={{
