@@ -1,3 +1,4 @@
+"use client";
 import { Editor } from "@monaco-editor/react";
 
 export const CodeEditor = () => {
@@ -6,7 +7,7 @@ export const CodeEditor = () => {
 			height="80vh"
 			width="80%"
 			theme="vs-dark"
-			defaultLanguage="python"
+			defaultLanguage="py"
 			defaultValue="homework = true"
 		/>
 	);
