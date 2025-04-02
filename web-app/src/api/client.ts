@@ -20,7 +20,7 @@ export const apiClient = (baseUrl: string = API_BASE_URL) => {
 
 	const post = async <Request, Response>(
 		url: string,
-		data: Request,
+		data?: Request,
 		config?: AxiosRequestConfig
 	): Promise<Response> => {
 		try {

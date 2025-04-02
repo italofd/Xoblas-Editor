@@ -27,7 +27,7 @@ export const executePythonCode = async (
 		output = res.code_output || "";
 	} catch (e) {
 		const isAxiosError = axios.isAxiosError(e);
-		if (isAxiosError) output = e?.response?.data.detail.error;
+		if (isAxiosError) output = `Error: ${e?.response?.data.detail.error}`;
 		else throw e;
 	}
 
