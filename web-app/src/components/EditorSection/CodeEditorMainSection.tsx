@@ -16,7 +16,7 @@ export const CodeEditorMainSection = () => {
   return (
     <div className="flex w-full h-full">
       <MainLayout code={code} setExecutionResponse={setExecutionResponse}>
-        <div className="flex gap-8">
+        <div className="flex h-full gap-8">
           <CodeEditor onChange={(code) => code && setCode(code)} />
         </div>
       </MainLayout>
