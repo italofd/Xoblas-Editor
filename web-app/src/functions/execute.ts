@@ -19,14 +19,13 @@ export const executePythonCode = async (
   try {
     const res = await apiClient().post<
       ExecuteRequestBody,
-      { code_output?: string }
+      { message: string; code_output?: string }
     >("/execute", {
       code,
       should_save,
     });
 
-    //[TO-DO]: Revisit this and implement logic to show: Not produced any input but was valid code
-    output = res.code_output || "";
+    output = res.code_output ? res.code_output : res.message;
   } catch (e) {
     const isAxiosError = axios.isAxiosError(e);
     if (isAxiosError) output = `Error: ${e?.response?.data.detail.error}`;
