@@ -1,7 +1,7 @@
-import { API_BASE_URL } from "@/constants/api";
+import { getServerURL } from "@/utils/getServerURL";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
-export const apiClient = (baseUrl: string = API_BASE_URL) => {
+export const apiClient = (baseUrl: string = getServerURL()) => {
   const get = async <R>(
     url: string,
     config?: AxiosRequestConfig,
