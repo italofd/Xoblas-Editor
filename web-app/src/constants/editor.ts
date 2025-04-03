@@ -1,3 +1,2 @@
 export const DEFAULT_PYTHON_CODE =
-	"#You have access to both libraries with all modules\n#Import as it is below and feel free to use =)\nimport scipy\nimport pandas\n\n\ndef main():\n    mydataset = {\n        " +
-	'\'languages\': ["JS", "GO", "Python"],\n        \'speed\': [7, 8, 5]\n    }\n    print("Hello, world!")\n    print(pandas.DataFrame(mydataset))\n    print(scipy.constants.liter)\n\nmain()';
+	'#Scipy already imported as default "scipy"\n#Pandas already imported as default "pd"\n\ndef main():  \n    print("Hello, world!")\n\n    mydataset = {\n        \'cars\': ["BMW", "Volvo", "Ford"],\n        \'passings\': [3, 7, 2]\n    }\n\n    print(pd.DataFrame(mydataset))\n    print(scipy.constants.liter)\n    \n    #Return printed is necessary code\n    return printed\n\n#Return the result as well contained the printed values\nresult = main()\n\n';
