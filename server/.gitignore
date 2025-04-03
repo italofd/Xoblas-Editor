@@ -5,3 +5,6 @@ lib
 lib64
 
 pyvenv.cfg
+
+#Avoid sending full database back and forth on deploys, SQLite inside the code is just a initial implementation
+aq-take-home.db

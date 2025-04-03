@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class ExecuteReqBody(BaseModel):
     code: str
+    should_save: bool
 
 
 class BaseExecuteResponse(BaseModel):

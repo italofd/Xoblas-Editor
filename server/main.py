@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,15 +7,13 @@ import pandas
 
 from routers import ping, execute
 
-mydataset = {"cars": ["BMW", "Volvo", "Ford"], "passings": [3, 7, 2]}
-
 app = FastAPI()
 
-# [TO-DO]: This needs to target our actual production url
-# This will be provided by our host platform (still unknown for this project XD)
+# [TO-DO]: Make this be dynamically targeting depending if its local or prod
 origins = [
     "http://localhost",
     "http://localhost:3000",
+    "https://aq-take-home.vercel.app",
 ]
 
 app.add_middleware(
@@ -25,8 +24,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(ping.router)
 app.include_router(execute.router)
+
+
+mydataset = {"cars": ["BMW", "Volvo", "Ford"], "passings": [3, 7, 2]}
 
 
 @app.get("/")

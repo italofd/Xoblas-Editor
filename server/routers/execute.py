@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException
 import pandas as pd
 import scipy
 from RestrictedPython import compile_restricted, safe_globals, PrintCollector
-from routers.schemas.executeSchemas import *
+from database.client import SQLiteClient
+from routers.schemas.execute_schemas import ExecuteReqBody, execResponses
 
 router = APIRouter()
 
@@ -16,6 +17,7 @@ router = APIRouter()
 )
 async def execute(body: ExecuteReqBody):
     code = body.code
+    should_save = body.should_save
 
     globals = dict(safe_globals)
 
@@ -28,15 +30,19 @@ async def execute(body: ExecuteReqBody):
 
     try:
         # Compile the code in restricted mode
-        byte_code = compile_restricted(code, filename="<inline code>", mode="exec")
+        compiled = compile_restricted(code, filename="<inline code>", mode="exec")
 
         # Local namespace for execution
         locals = {}
 
         # Execute the compiled code
-        exec(byte_code, globals, locals)
+        exec(compiled, globals, locals)
 
         _output_ = locals.get("result")
+
+        if should_save:
+            client = SQLiteClient()
+            client.add_code_with_output(code=code, output=_output_)
 
         if _output_:
             return {
