@@ -15,12 +15,17 @@ export const CodeEditorFooter = ({
 			<button
 				className="px-6 py-2 bg-gradient-to-r font-bold from-blue-500 to-indigo-600 text-white rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
 				onClick={async () =>
-					code && onExecutePythonCode(setExecutionResponse, code)
+					code && onExecutePythonCode(setExecutionResponse, code, false)
 				}
 			>
 				Run your code
 			</button>
-			<button className="px-6 py-2 bg-gradient-to-r font-bold from-green-500 to-green-600 text-white rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+			<button
+				className="px-6 py-2 bg-gradient-to-r font-bold from-green-500 to-green-600 text-white rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+				onClick={async () =>
+					code && onExecutePythonCode(setExecutionResponse, code, true)
+				}
+			>
 				Run and Store
 			</button>
 		</>

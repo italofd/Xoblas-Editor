@@ -5,7 +5,8 @@ import axios from "axios";
 
 export const executePythonCode = async (
 	apiClient: typeof axiosClient,
-	code: string
+	code: string,
+	should_save: boolean
 ) => {
 	//[TO-DO]: Transform into a factory and avoid this drilling
 	await ping(apiClient);
@@ -21,6 +22,7 @@ export const executePythonCode = async (
 			{ code_output?: string }
 		>("/execute", {
 			code,
+			should_save,
 		});
 
 		//[TO-DO]: Revisit this and implement logic to show: Not produced any input but was valid code
