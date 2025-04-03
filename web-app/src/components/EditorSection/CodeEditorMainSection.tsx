@@ -14,7 +14,7 @@ export const CodeEditorMainSection = () => {
     useState<PythonCodeDTO>(null);
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full h-full">
       <MainLayout code={code} setExecutionResponse={setExecutionResponse}>
         <div className="flex gap-8">
           <CodeEditor onChange={(code) => code && setCode(code)} />
