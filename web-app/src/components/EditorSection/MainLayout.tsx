@@ -12,7 +12,7 @@ export const MainLayout = ({
   setExecutionResponse: Dispatch<SetStateAction<PythonCodeDTO>>;
 }) => {
   return (
-    <div className="w-full h-full flex bg-zinc-900 text-zinc-100 p-4 md:p-8">
+    <div className="w-full h-full min-w-[40%] flex bg-zinc-900 text-zinc-100 p-4 md:p-8">
       <div className="w-full mx-auto space-y-8">
         <div className="flex flex-col h-full bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
           <div className="p-4 border-b border-zinc-700">
