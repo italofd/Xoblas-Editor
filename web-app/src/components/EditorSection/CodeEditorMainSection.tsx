@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
 
-import { CodeEditorFooter } from "@/components/EditorSection/CodeEditorFooter";
 import { CodeEditor } from "@/components/EditorSection/CodeEditor";
 import { DEFAULT_PYTHON_CODE } from "@/constants/editor";
 import { PythonCodeDTO } from "@/types/api";
+import { MainLayout } from "./MainLayout";
+import { OutputLayout } from "./OutputLayout";
 
 export const CodeEditorMainSection = () => {
 	const [code, setCode] = useState<PythonCodeDTO>(DEFAULT_PYTHON_CODE);
@@ -13,19 +14,15 @@ export const CodeEditorMainSection = () => {
 		useState<PythonCodeDTO>(null);
 
 	return (
-		<>
-			<div className="flex gap-8">
-				<CodeEditor onChange={(code) => code && setCode(code)} />
-				<div className="border-2 border-gray-300 w-[30%] p-4">
-					<p className="text-2xl whitespace-pre-wrap">{executionResponse}</p>
+		<div className="flex w-full">
+			<MainLayout code={code} setExecutionResponse={setExecutionResponse}>
+				<div className="flex gap-8">
+					<CodeEditor onChange={(code) => code && setCode(code)} />
 				</div>
-			</div>
-			<div className="mt-12 flex gap-6">
-				<CodeEditorFooter
-					code={code}
-					setExecutionResponse={setExecutionResponse}
-				/>
-			</div>
-		</>
+			</MainLayout>
+			<OutputLayout>
+				<p>{executionResponse}</p>
+			</OutputLayout>
+		</div>
 	);
 };

@@ -8,8 +8,8 @@ import { Editor, OnChange } from "@monaco-editor/react";
 export const CodeEditor = ({ onChange = () => {} }: { onChange: OnChange }) => {
 	return (
 		<Editor
-			height="500px"
-			width="80%"
+			height="50vh"
+			width="100%"
 			defaultLanguage="python"
 			defaultValue={DEFAULT_PYTHON_CODE}
 			//[TO-DO]: Implement a debouncer, this will not work and its just to see how things is going =)
