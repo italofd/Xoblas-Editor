@@ -6,6 +6,7 @@ from typing import List, Dict, Optional, Tuple
 
 # Basic SQL-Lite client, first option due to already implemented inside std python
 # This will most probably be refactor in favor of something hosted outside of the server itself
+# DEPRECATED: Use the PostgreSQL client
 class SQLiteClient:
     def __init__(self, db_path: str = "aq-take-home.db"):
         self.db_path = db_path

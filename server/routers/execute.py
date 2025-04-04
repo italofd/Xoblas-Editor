@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from database.client import SQLiteClient
 from routers.schemas.execute_schemas import ExecuteReqBody, execResponses
 from run_safe_subprocess import run_client_code
+from database.postgresql_client import PostgreSQLInstance
 
 message_has_output = "Your code has executed with success and produced an output"
 
@@ -28,8 +28,7 @@ async def execute(body: ExecuteReqBody):
 
         if success:
             if should_save:
-                client = SQLiteClient()
-                client.add_code_with_output(code=code, output=stdout)
+                PostgreSQLInstance.add_code_with_output(code=code, output=stdout)
 
             return {
                 "message": (

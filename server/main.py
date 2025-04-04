@@ -1,11 +1,17 @@
-from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 
 from scipy import constants
 import pandas
 
 from routers import ping, execute
+from database.postgresql_client import PostgreSQLInstance
+
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -23,6 +29,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+PostgreSQLInstance.create_tables()
 
 
 app.include_router(ping.router)
