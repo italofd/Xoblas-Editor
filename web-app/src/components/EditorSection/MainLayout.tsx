@@ -1,15 +1,21 @@
 import { Dispatch, ReactNode, SetStateAction } from "react";
 import { CodeEditorFooter } from "./CodeEditorFooter";
-import { PythonCodeDTO } from "@/types/api";
+import {
+  PythonCodeDTO,
+  SetIsExecLoading,
+  SetExecutionResponse,
+} from "@/types/api";
 
 export const MainLayout = ({
   children,
   code,
   setExecutionResponse: executionResponse,
+  setIsExecLoading,
 }: {
   children: ReactNode;
   code: PythonCodeDTO;
-  setExecutionResponse: Dispatch<SetStateAction<PythonCodeDTO>>;
+  setExecutionResponse: SetExecutionResponse;
+  setIsExecLoading: SetIsExecLoading;
 }) => {
   return (
     <div className="w-full h-full min-w-[40%] flex bg-zinc-900 text-zinc-100 p-4 md:p-8">
@@ -28,6 +34,7 @@ export const MainLayout = ({
             <CodeEditorFooter
               code={code}
               setExecutionResponse={executionResponse}
+              setIsExecLoading={setIsExecLoading}
             />
           </div>
         </div>

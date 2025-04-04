@@ -7,4 +7,6 @@ export interface ExecuteRequestBody {
 
 export type SetExecutionResponse = Dispatch<SetStateAction<PythonCodeDTO>>;
 
+export type SetIsExecLoading = Dispatch<SetStateAction<boolean>>;
+
 export type PythonCodeDTO = string | null;
