@@ -1,5 +1,4 @@
 import resource
-import sys
 
 # This file is for running executable python string code in a isolated manner
 # Deploy is using docker as well as other tools
@@ -15,5 +14,4 @@ def cap_resources():
 
 
 if __name__ == "__main__":
-    code = sys.argv[1]
     cap_resources()
