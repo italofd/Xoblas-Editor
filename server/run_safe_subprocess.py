@@ -15,10 +15,11 @@ def run_client_code(code: str):
 
         # Use sys.executable to ensure the same Python interpreter is used (for pandas and scipy this is necessary)
         result = subprocess.run(
-            [sys.executable, temp_filename],
+            [sys.executable, temp_filename, "safe_env.py"],
             capture_output=True,
             text=True,
-            check=False,  # Don't raise exception on non-zero exit
+            check=False,
+            env={},
         )
 
         # Return stdout and stderr

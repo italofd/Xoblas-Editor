@@ -1,6 +1,7 @@
 
 FROM python:3.11
 
+RUN apt-get update -y
 
 WORKDIR /code
 
@@ -8,10 +9,13 @@ WORKDIR /code
 COPY ./requirements.txt /code/requirements.txt
 
 
+COPY .env /code/
+
+
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 
-COPY . /code/app
+COPY . /code/
 
 
-CMD ["fastapi", "run", "app/main.py", "--port", "80"]
+CMD ["fastapi", "run", "main.py", "--port", "80"]
