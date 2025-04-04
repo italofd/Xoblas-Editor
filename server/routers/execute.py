@@ -24,7 +24,7 @@ async def execute(body: ExecuteReqBody):
     should_save = body.should_save
 
     try:
-        success, stdout, stderr = run_client_code(code_string=code).values()
+        success, stdout, stderr = run_client_code(code).values()
 
         if success:
             if should_save:

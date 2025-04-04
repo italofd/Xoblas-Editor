@@ -4,13 +4,15 @@ import tempfile
 import os
 
 
-def run_client_code(code_string):
+def run_client_code(code: str):
+
     # Create a temporary file to store the client's code
     with tempfile.NamedTemporaryFile(suffix=".py", delete=False) as temp_file:
         temp_filename = temp_file.name
-        temp_file.write(code_string.encode("utf-8"))
+        temp_file.write(code.encode("utf-8"))
 
     try:
+
         # Use sys.executable to ensure the same Python interpreter is used (for pandas and scipy this is necessary)
         result = subprocess.run(
             [sys.executable, temp_filename],
