@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException
-import pandas as pd
-import scipy
-from RestrictedPython import compile_restricted, safe_globals, PrintCollector
 from database.client import SQLiteClient
 from routers.schemas.execute_schemas import ExecuteReqBody, execResponses
+from run_safe_subprocess import run_client_code
+
+message_has_output = "Your code has executed with success and produced an output"
+
+message_has_not_output = (
+    "Your code has executed with success but didn't produced any output"
+)
 
 router = APIRouter()
 
@@ -19,40 +23,22 @@ async def execute(body: ExecuteReqBody):
     code = body.code
     should_save = body.should_save
 
-    globals = dict(safe_globals)
-
-    # Add panda and scipy to dict based on safe_globals
-    globals["pd"] = pd
-    globals["scipy"] = scipy
-
-    # Add printCollector as suggested by documentation
-    globals["_print_"] = PrintCollector
-
     try:
-        # Compile the code in restricted mode
-        compiled = compile_restricted(code, filename="<inline code>", mode="exec")
+        success, stdout, stderr = run_client_code(code_string=code).values()
 
-        # Local namespace for execution
-        locals = {}
+        if success:
+            if should_save:
+                client = SQLiteClient()
+                client.add_code_with_output(code=code, output=stdout)
 
-        # Execute the compiled code
-        exec(compiled, globals, locals)
-
-        _output_ = locals.get("result")
-
-        if should_save:
-            client = SQLiteClient()
-            client.add_code_with_output(code=code, output=_output_)
-
-        if _output_:
             return {
-                "message": "Your code has executed with success and produced an output",
-                "code_output": _output_,
+                "message": (
+                    message_has_output if len(stdout) > 0 else message_has_not_output
+                ),
+                "code_output": stdout,
             }
 
-        return {
-            "message": "Your code has executed with success but didn't produced any output"
-        }
+        raise HTTPException(status_code=400, detail={"error": stderr})
 
     except Exception as e:
         raise HTTPException(status_code=400, detail={"error": str(e)})
