@@ -31,9 +31,20 @@
 :construction: OBS: I have never used Python for a real project before, I tried my best to research while doing the coding with that in mind, this section is much more opinion-based than the web app when I have most of my experience.
 
 - **FastAPI**: For a basic project, it offers everything you want, also, the documentation goes a long way for people like me that were learning as well as they talk about Python itself, cors, and other core things that are easy to set up and I appreciate the OpenAPI standards and pre-built documentation and docs page.
-- **RestrictedPython**: It's the implemented way in the project right now, RestrictedPython makes it easier to compile and exec Python code in a safe way with its pre-built functions and functionality, but limits a lot the client code that can be sent (see discussions below for more).
-- **SQLite**: For the MVP and concept, using a SQL already implemented as a std library looks good, even if it is too simple and we are not deploying anywhere, meaning that is part of the bundle of the project, it has a lot of downsides that will be a pushing factor for me to refactor in favor of MySQL or PostgreSQL in the final version of it.
+- **PostgreSQL / psycopg**: Most available relational database to free deploy, easy to use and have a good library to manage it in python.
 - **...Others**: All the other tools that are requirements have come by default or were highly recommended by the documentation of FastAPI or/RestrictedPython
+- ~~RestrictedPython: It's the implemented way in the project right now, RestrictedPython makes it easier to compile and exec Python code in a safe way with its pre-built functions and functionality, but limits a lot the client code that can be sent (see discussions below for more).~~
+- ~~SQLite: For the MVP and concept, using a SQL already implemented as a std library looks good, even if it is too simple and we are not deploying anywhere, meaning that is part of the bundle of the project, it has a lot of downsides that will be a pushing factor for me to refactor in favor of MySQL or PostgreSQL in the final version of it.~~
+
+## Deploy
+
+#### web-app
+
+The NextJS app is hosted at _Vercel_
+
+#### server
+
+The FastAPI server is deployed in a docker container at _Render_ alongside another separated project hosting the PostgreSQL database
 
 ## Main Discussions
 
