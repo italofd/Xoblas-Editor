@@ -10,7 +10,6 @@ export const executePythonCode = async (
 
   let output: string | null = null;
 
-  //[TO-DO]: Implement type for response, great if could be directly from the OpenAPI doc from python server =)
   try {
     const res = await apiClient.post<
       ExecuteRequestBody,

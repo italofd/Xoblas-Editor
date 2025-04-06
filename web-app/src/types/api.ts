@@ -6,6 +6,8 @@ export interface ExecuteRequestBody {
   should_save: boolean;
 }
 
+export interface PingRequestBody {}
+
 export type PythonCodeDTO = string | null;
 
 //React
