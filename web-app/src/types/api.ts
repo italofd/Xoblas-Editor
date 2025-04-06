@@ -6,7 +6,7 @@ export interface ExecuteRequestBody {
   should_save: boolean;
 }
 
-export interface PingRequestBody {}
+export type PingRequestBody = null;
 
 export type PythonCodeDTO = string | null;
 
