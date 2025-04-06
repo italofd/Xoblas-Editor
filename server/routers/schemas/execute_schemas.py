@@ -8,10 +8,11 @@ class ExecuteReqBody(BaseModel):
 
 class BaseExecuteResponse(BaseModel):
     message: str
+    code_output: str
 
 
 class SuccessAndOutputExecuteResponse(BaseExecuteResponse):
-    code_output: str
+    have_inserted: bool
 
 
 class ErrorExecuteResponse(BaseExecuteResponse):

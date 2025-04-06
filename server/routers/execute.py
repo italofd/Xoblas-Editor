@@ -1,13 +1,11 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
+
 from routers.schemas.execute_schemas import ExecuteReqBody, execResponses
 from run_safe_subprocess import run_client_code
 from database.postgresql_client import PostgreSQLInstance
+from routers.constants.messages import message_has_not_output, message_has_output
 
-message_has_output = "Your code has executed with success and produced an output"
-
-message_has_not_output = (
-    "Your code has executed with success but didn't produced any output"
-)
 
 router = APIRouter()
 
@@ -24,20 +22,29 @@ async def execute(body: ExecuteReqBody):
     should_save = body.should_save
 
     try:
+        # Run the code in a safe env
         success, stdout, stderr = run_client_code(code).values()
 
         if success:
+            message = message_has_output if len(stdout) > 0 else message_has_not_output
+            status_code = 201 if should_save else 200
+
             if should_save:
+                # Call postgres to add rows into "executable" and "code_output"
                 PostgreSQLInstance.add_code_with_output(code=code, output=stdout)
 
-            return {
-                "message": (
-                    message_has_output if len(stdout) > 0 else message_has_not_output
-                ),
-                "code_output": stdout,
-            }
+            return JSONResponse(
+                status_code=status_code,
+                content={
+                    "message": message,
+                    "code_output": stdout,
+                    # Avoiding extra return by return "have_inserted" dynamically
+                    **({"have_inserted": True} if should_save else {}),
+                },
+            )
 
+        print(stderr)
         raise HTTPException(status_code=400, detail={"error": stderr})
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail={"error": str(e)})
+        raise HTTPException(status_code=401, detail={"error": str(e)})
