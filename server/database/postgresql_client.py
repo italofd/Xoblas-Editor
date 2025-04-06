@@ -63,7 +63,7 @@ class PostgreSQLClient:
             print(f"SQL execution failed: {e}")
 
             self.connection.rollback()
-            raise
+            raise e
 
     def create_tables(self):
         try:
@@ -93,6 +93,7 @@ class PostgreSQLClient:
 
         except Exception as e:
             print(f"Table creation has failed with error: {e}")
+            raise e
 
         finally:
             self.disconnect()
@@ -121,7 +122,7 @@ class PostgreSQLClient:
 
         except Exception as e:
             print(f"Error adding code with output: {e}")
-            return None
+            raise e
 
         finally:
             self.disconnect()
