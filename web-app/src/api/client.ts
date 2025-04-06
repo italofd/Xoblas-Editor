@@ -1,7 +1,6 @@
-import { getServerURL } from "@/utils/getServerURL";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
-export const apiClient = (baseUrl: string = getServerURL()) => {
+export const apiClient = (baseUrl: string) => {
   const get = async <R>(
     url: string,
     config?: AxiosRequestConfig,

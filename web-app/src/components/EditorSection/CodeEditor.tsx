@@ -5,6 +5,7 @@ import { Editor, OnChange } from "@monaco-editor/react";
 /**
  * This is only client side since monaco-react is not adapted fully to server components
  */
+
 export const CodeEditor = ({ onChange = () => {} }: { onChange: OnChange }) => {
   return (
     <Editor

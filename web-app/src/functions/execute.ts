@@ -1,23 +1,18 @@
-import { apiClient as axiosClient } from "@/api/client";
-import { ping } from "./ping";
-import { ExecuteRequestBody } from "@/types/api";
+import { ApiClient, ExecuteRequestBody } from "@/types/api";
 import axios from "axios";
 
 export const executePythonCode = async (
-  apiClient: typeof axiosClient,
-  code: string,
-  should_save: boolean,
+  deps: { apiClient: ApiClient },
+  params: { code: string; should_save: boolean },
 ) => {
-  //[TO-DO]: Transform into a factory and avoid this drilling
-  await ping(apiClient);
+  const { apiClient } = deps;
+  const { code, should_save } = params;
 
   let output: string | null = null;
 
-  //Wait for ping to be successful to proceed, that could be just on cold starts
-  //As we are on server free tier, it goes off if its not being used and takes somewhere about 40s to get up.
   //[TO-DO]: Implement type for response, great if could be directly from the OpenAPI doc from python server =)
   try {
-    const res = await apiClient().post<
+    const res = await apiClient.post<
       ExecuteRequestBody,
       { message: string; code_output?: string }
     >("/execute", {

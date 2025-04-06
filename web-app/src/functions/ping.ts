@@ -1,5 +1,5 @@
-import { apiClient as axiosClient } from "@/api/client";
+import { ApiClient } from "@/types/api";
 
-export const ping = async (apiClient: typeof axiosClient) =>
+export const ping = async (deps: { apiClient: ApiClient }) =>
   //[TO-DO]: Implement separated type for response for each fn
-  await apiClient().post<unknown, { message: string }>("/ping");
+  await deps.apiClient.post<unknown, { message: string }>("/ping");
