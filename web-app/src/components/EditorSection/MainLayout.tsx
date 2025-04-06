@@ -1,19 +1,16 @@
 import { ReactNode } from "react";
 import { CodeEditorFooter } from "./CodeEditorFooter";
-import {
-  PythonCodeDTO,
-  SetIsExecLoading,
-  SetExecutionResponse,
-} from "@/types/api";
+import { SetIsExecLoading, SetExecutionResponse } from "@/types/api";
+import { CodeEditorRef } from "@/types/editor";
 
 export const MainLayout = ({
   children,
-  code,
+  monacoRef,
   setExecutionResponse: executionResponse,
   setIsExecLoading,
 }: {
   children: ReactNode;
-  code: PythonCodeDTO;
+  monacoRef: CodeEditorRef;
   setExecutionResponse: SetExecutionResponse;
   setIsExecLoading: SetIsExecLoading;
 }) => {
@@ -32,7 +29,7 @@ export const MainLayout = ({
           </div>
           <div className="h-18 min-h-18 max-h-18 p-4 border-t border-zinc-700 flex justify-between">
             <CodeEditorFooter
-              code={code}
+              monacoRef={monacoRef}
               setExecutionResponse={executionResponse}
               setIsExecLoading={setIsExecLoading}
             />

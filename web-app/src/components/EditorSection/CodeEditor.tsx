@@ -1,20 +1,20 @@
 "use client";
 import { DEFAULT_PYTHON_CODE } from "@/constants/editor";
-import { Editor, OnChange } from "@monaco-editor/react";
+import { CodeEditorRef } from "@/types/editor";
+import { Editor } from "@monaco-editor/react";
 
 /**
  * This is only client side since monaco-react is not adapted fully to server components
  */
 
-export const CodeEditor = ({ onChange = () => {} }: { onChange: OnChange }) => {
+export const CodeEditor = ({ editorRef }: { editorRef: CodeEditorRef }) => {
   return (
     <Editor
       height="100%"
       width="100%"
       defaultLanguage="python"
       defaultValue={DEFAULT_PYTHON_CODE}
-      //[TO-DO]: Implement a debouncer, this will not work and its just to see how things is going =)
-      onChange={onChange}
+      onMount={(editor) => (editorRef.current = editor)}
       theme="vs-dark"
       options={{
         minimap: { enabled: false },
