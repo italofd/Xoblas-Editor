@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiHandlers } from "@/api";
+// import { ApiHandlers } from "@/api";
 import { onExecutePythonCode } from "@/handlers/onExecutePythonCode";
 import {
   PythonCodeDTO,
@@ -50,7 +50,7 @@ export const CodeEditorFooter = ({
   };
 
   const getLastOutputs = async () => {
-    const res = await new ApiHandlers().getLastOutputs(5);
+    // const res = await new ApiHandlers().getLastOutputs(5);
     //[TO-DO]: Add set state and do something with the outputs
   };
 
