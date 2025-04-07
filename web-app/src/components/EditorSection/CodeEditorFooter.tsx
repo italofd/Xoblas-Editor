@@ -75,7 +75,7 @@ export const CodeEditorFooter = ({
       <button
         onClick={async () => await getLastOutputs()}
         disabled={isExecLoading}
-        className={`${baseStyle} border-green-700 border-1 hover:bg-green-700 transition-discrete disabled:animate-pulse`}
+        className={`${baseStyle} justify-center border-green-700 border-1 hover:bg-green-700 transition-discrete disabled:animate-pulse`}
       >
         Get Last Outputs
       </button>
