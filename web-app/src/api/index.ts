@@ -1,8 +1,9 @@
 import { apiClient } from "@/api/client";
-import { executePythonCode } from "./execute";
-import { ping } from "./ping";
+import { executePythonCode } from "./functions/execute";
+import { ping } from "./functions/ping";
 import { getServerURL } from "@/utils/getServerURL";
 import { ApiClient } from "@/types/api";
+import { getLastOutputs } from "./functions/getLastOutputs";
 
 //Classes because the client will need to reuse own functionality
 //Doing that in factory or other design pattern its considerable worse
@@ -31,5 +32,11 @@ export class ApiHandlers {
       { apiClient: this.client },
       { code, should_save },
     );
+  }
+
+  public async getLastOutputs(quantity: number) {
+    await this.serverHealthCheck();
+
+    return getLastOutputs({ apiClient: this.client }, { quantity });
   }
 }

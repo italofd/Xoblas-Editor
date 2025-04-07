@@ -1,5 +1,5 @@
 import { KEY_STORAGE_USER_ID } from "@/constants/tracking";
-import { TrackAnonymous } from "@/functions/tracking";
+import { TrackAnonymous } from "@/handlers/tracking";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 export const apiClient = (baseUrl: string) => {

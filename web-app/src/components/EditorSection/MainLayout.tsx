@@ -35,15 +35,14 @@ export const MainLayout = ({
               {children}
             </div>
           </div>
-          <div className="h-18 min-h-18 max-h-18 p-4 border-t border-zinc-700 flex justify-between">
-            <CodeEditorFooter
-              monacoRef={monacoRef}
-              isExecLoading={isExecLoading}
-              setExecutionResponse={setExecutionResponse}
-              setIsExecLoading={setIsExecLoading}
-              setShouldShowDialog={setShouldShowDialog}
-            />
-          </div>
+
+          <CodeEditorFooter
+            monacoRef={monacoRef}
+            isExecLoading={isExecLoading}
+            setExecutionResponse={setExecutionResponse}
+            setIsExecLoading={setIsExecLoading}
+            setShouldShowDialog={setShouldShowDialog}
+          />
         </div>
       </div>
     </div>
