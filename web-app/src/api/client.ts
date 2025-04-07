@@ -1,6 +1,16 @@
+import { KEY_STORAGE_USER_ID } from "@/constants/tracking";
+import { TrackAnonymous } from "@/functions/tracking";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 
 export const apiClient = (baseUrl: string) => {
+  const userID = new TrackAnonymous().getUserID();
+
+  axios.interceptors.request.use((config) => {
+    config.headers[KEY_STORAGE_USER_ID] = userID;
+
+    return config;
+  });
+
   const get = async <R>(
     url: string,
     config?: AxiosRequestConfig,
