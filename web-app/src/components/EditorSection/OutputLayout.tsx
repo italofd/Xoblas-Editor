@@ -9,7 +9,7 @@ export const OutputLayout = ({
   isExecLoading: boolean;
 }) => {
   return (
-    <div className="flex flex-col max-w-[30%] min-w-[30%] bg-zinc-800 border border-zinc-700 rounded-lg p-4">
+    <div className="flex flex-col h-80 min-h-60 lg:h-full lg:max-w-[30%] lg:min-w-[30%] bg-zinc-800 border border-zinc-700 rounded-lg p-4">
       <h2 className="text-lg font-semibold mb-2">Output</h2>
       <div className="h-full overflow-auto scrollbar-track:bg-slate-400 bg-zinc-950 p-4 rounded-md font-mono text-lg text-green-400 whitespace-pre-wrap">
         {isExecLoading ? <Loader /> : children}

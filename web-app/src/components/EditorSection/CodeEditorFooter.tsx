@@ -10,6 +10,9 @@ import {
 import { SetShouldShowDialog } from "@/types/components";
 import { CodeEditorRef } from "@/types/editor";
 
+const baseStyle =
+  "px-4 py-2 rounded-md flex items-center disabled:animate-pulse";
+
 export const CodeEditorFooter = ({
   monacoRef,
   isExecLoading,
@@ -52,17 +55,17 @@ export const CodeEditorFooter = ({
   };
 
   return (
-    <div className="h-18 min-h-18 max-h-18 p-4 border-t border-zinc-700 flex justify-between">
-      <div className="flex gap-8">
+    <div className="flex flex-col justify-between p-4 border-t gap-4 border-zinc-700 sm:flex-row min-h-30 sm:h-18 sm:min-h-18 sm:max-h-18">
+      <div className="flex justify-between gap-4 md:gap-8">
         <button
-          className="px-4 py-2 rounded-md border border-zinc-700 text-zinc-300 hover:bg-zinc-700 flex items-center disabled:animate-pulse disabled:hover:bg-zinc-800"
+          className={`${baseStyle} border border-zinc-700 text-zinc-300 hover:bg-zinc-700 disabled:hover:bg-zinc-800`}
           onClick={async () => await onClick(false)}
           disabled={isExecLoading}
         >
           Run
         </button>
         <button
-          className="px-4 py-2 rounded-md bg-zinc-700 hover:bg-zinc-600 flex items-center disabled:animate-pulse disabled:hover:bg-zinc-700"
+          className={`${baseStyle} bg-zinc-700 hover:bg-zinc-600 disabled:hover:bg-zinc-700`}
           onClick={async () => await onClick(true)}
           disabled={isExecLoading}
         >
@@ -71,7 +74,8 @@ export const CodeEditorFooter = ({
       </div>
       <button
         onClick={async () => await getLastOutputs()}
-        className="px-4 py-2 rounded-md border-green-700 border-1 hover:bg-green-700 transition-discrete disabled:animate-pulse"
+        disabled={isExecLoading}
+        className={`${baseStyle} border-green-700 border-1 hover:bg-green-700 transition-discrete disabled:animate-pulse`}
       >
         Get Last Outputs
       </button>

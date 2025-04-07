@@ -27,7 +27,7 @@ export const CodeEditorMainSection = () => {
 
   return (
     <>
-      <div className="flex w-full h-full">
+      <div className="flex flex-col lg:flex-row w-full h-full">
         <MainLayout
           monacoRef={editorRef}
           isExecLoading={isExecLoading}
