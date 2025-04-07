@@ -73,7 +73,8 @@ class PostgreSQLClient:
                 """
                 CREATE TABLE IF NOT EXISTS executable (
                     id TEXT PRIMARY KEY,
-                    code TEXT NOT NULL
+                    code TEXT NOT NULL,
+                    user_id TEXT NOT NULL
                 )
                 """
             )
@@ -98,7 +99,9 @@ class PostgreSQLClient:
         finally:
             self.disconnect()
 
-    def add_code_with_output(self, code: str, output: str) -> Optional[Dict[str, str]]:
+    def add_code_with_output(
+        self, code: str, output: str, userId: str
+    ) -> Optional[Dict[str, str]]:
         try:
             self.connect()
             # Generate UUIDs for new records
@@ -107,8 +110,8 @@ class PostgreSQLClient:
 
             # [TO-DO]: Create types that match database ones to keep server and database in sync with contracts
             self.execute_query(
-                "INSERT INTO executable (id, code) VALUES (%s, %s)",
-                (executable_id, code),
+                "INSERT INTO executable (id, code, user_id) VALUES (%s, %s, %s)",
+                (executable_id, code, userId),
             )
 
             self.execute_query(

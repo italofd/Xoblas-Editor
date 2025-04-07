@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from fastapi.responses import JSONResponse
+from typing import Annotated
+
 
 from routers.schemas.execute_schemas import ExecuteReqBody, execResponses
 from run_safe_subprocess import run_client_code
@@ -17,7 +19,10 @@ router = APIRouter()
     description="Call this endpoint with a python valid code to execute in a running python environment",
     responses=execResponses,
 )
-async def execute(body: ExecuteReqBody):
+async def execute(
+    body: ExecuteReqBody,
+    user_id: Annotated[str | None, Header(alias="X-Aqtakehome-User")],
+):
     code = body.code
     should_save = body.should_save
 
@@ -31,7 +36,9 @@ async def execute(body: ExecuteReqBody):
 
             if should_save:
                 # Call postgres to add rows into "executable" and "code_output"
-                PostgreSQLInstance.add_code_with_output(code=code, output=stdout)
+                PostgreSQLInstance.add_code_with_output(
+                    code=code, output=stdout, userId=user_id
+                )
 
             return JSONResponse(
                 status_code=status_code,
