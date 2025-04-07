@@ -2,18 +2,26 @@ import { ReactNode } from "react";
 import { CodeEditorFooter } from "./CodeEditorFooter";
 import { SetIsExecLoading, SetExecutionResponse } from "@/types/api";
 import { CodeEditorRef } from "@/types/editor";
+import { SetShouldShowDialog } from "@/types/components";
 
 export const MainLayout = ({
   children,
+  isExecLoading,
   monacoRef,
-  setExecutionResponse: executionResponse,
-  setIsExecLoading,
+  setters,
 }: {
   children: ReactNode;
+  isExecLoading: boolean;
   monacoRef: CodeEditorRef;
-  setExecutionResponse: SetExecutionResponse;
-  setIsExecLoading: SetIsExecLoading;
+  setters: {
+    setExecutionResponse: SetExecutionResponse;
+    setIsExecLoading: SetIsExecLoading;
+    setShouldShowDialog: SetShouldShowDialog;
+  };
 }) => {
+  const { setExecutionResponse, setIsExecLoading, setShouldShowDialog } =
+    setters;
+
   return (
     <div className="w-full h-full min-w-[40%] flex bg-zinc-900 text-zinc-100 p-4 md:p-8">
       <div className="w-full mx-auto space-y-8">
@@ -30,8 +38,10 @@ export const MainLayout = ({
           <div className="h-18 min-h-18 max-h-18 p-4 border-t border-zinc-700 flex justify-between">
             <CodeEditorFooter
               monacoRef={monacoRef}
-              setExecutionResponse={executionResponse}
+              isExecLoading={isExecLoading}
+              setExecutionResponse={setExecutionResponse}
               setIsExecLoading={setIsExecLoading}
+              setShouldShowDialog={setShouldShowDialog}
             />
           </div>
         </div>

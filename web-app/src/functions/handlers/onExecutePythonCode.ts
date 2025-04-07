@@ -1,14 +1,17 @@
 import { SetExecutionResponse } from "@/types/api";
 import { ApiHandlers } from "..";
+import { SetShouldShowDialog } from "@/types/components";
 
 export const onExecutePythonCode = async (
   setExecutionResponse: SetExecutionResponse,
+  setShouldShowDialog: SetShouldShowDialog,
   code: string,
   should_save: boolean,
 ) => {
   const handlers = new ApiHandlers();
 
-  const res = await handlers.execute(code, should_save);
+  const { output, wasInserted } = await handlers.execute(code, should_save);
 
-  if (res) setExecutionResponse(res);
+  if (output) setExecutionResponse(output);
+  if (wasInserted) setShouldShowDialog(true);
 };

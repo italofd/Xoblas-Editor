@@ -21,7 +21,7 @@ export const apiClient = (baseUrl: string) => {
     url: string,
     data?: Request,
     config?: AxiosRequestConfig,
-  ): Promise<Response> => {
+  ): Promise<{ data: Response; status: number }> => {
     try {
       const response: AxiosResponse<Response> = await axios.post(
         `${baseUrl}${url}`,
@@ -29,7 +29,7 @@ export const apiClient = (baseUrl: string) => {
         config,
       );
 
-      return response.data;
+      return { data: response.data, status: response.status };
     } catch (error) {
       throw error;
     }

@@ -9,9 +9,10 @@ export const executePythonCode = async (
   const { code, should_save } = params;
 
   let output: string | null = null;
+  let wasInserted: boolean = false;
 
   try {
-    const res = await apiClient.post<
+    const { data, status } = await apiClient.post<
       ExecuteRequestBody,
       { message: string; code_output?: string }
     >("/execute", {
@@ -19,12 +20,13 @@ export const executePythonCode = async (
       should_save,
     });
 
-    output = res.code_output ? res.code_output : res.message;
+    output = data.code_output ? data.code_output : data.message;
+    wasInserted = status === 201;
   } catch (e) {
     const isAxiosError = axios.isAxiosError(e);
     if (isAxiosError) output = `Error: ${e?.response?.data.detail.error}`;
     else throw e;
   }
 
-  return output;
+  return { output, wasInserted };
 };
