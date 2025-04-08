@@ -40,8 +40,6 @@ class SQLiteClient:
             self.cursor = None
 
     def create_tables(self):
-        # [TO-DO]: Consider moving to a separated file/module
-
         self.execute_query(
             """
         CREATE TABLE IF NOT EXISTS executable (

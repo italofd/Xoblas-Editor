@@ -27,9 +27,7 @@ export const OutputLayout = ({
   return (
     <>
       {showHeader && <h2 className="text-lg font-semibold">Output</h2>}
-      <CodeOutputComponent isLoading={isLoading}>
-        {children}
-      </CodeOutputComponent>
+      <CodeOutputComponent isLoading={isLoading}>{children}</CodeOutputComponent>
     </>
   );
 };

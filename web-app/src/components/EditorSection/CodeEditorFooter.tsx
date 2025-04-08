@@ -2,17 +2,12 @@
 
 import { onExecutePythonCode } from "@/handlers/onExecutePythonCode";
 import { onGetLastOutputs } from "@/handlers/onGetLastOutputs";
-import {
-  PythonCodeDTO,
-  SetIsExecLoading,
-  SetExecutionResponse,
-} from "@/types/api";
+import { PythonCodeDTO, SetIsExecLoading, SetExecutionResponse } from "@/types/api";
 import { SetShouldShowDialog } from "@/types/components";
 import { CodeEditorRef } from "@/types/editor";
 import { AddOutputFiles, SetIsLoadingOutputs } from "@/types/tabs";
 
-const baseStyle =
-  "px-4 py-2 rounded-md flex items-center disabled:animate-pulse";
+const baseStyle = "px-4 py-2 rounded-md flex items-center disabled:animate-pulse";
 
 export const CodeEditorFooter = ({
   monacoRef,
@@ -41,12 +36,7 @@ export const CodeEditorFooter = ({
       try {
         setIsExecLoading(true);
 
-        await onExecutePythonCode(
-          setExecutionResponse,
-          setShouldShowDialog,
-          code,
-          shouldSave,
-        );
+        await onExecutePythonCode(setExecutionResponse, setShouldShowDialog, code, shouldSave);
       } catch (error) {
         throw error;
       } finally {

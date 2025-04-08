@@ -28,10 +28,7 @@ export class ApiHandlers {
     //Wait for ping to be successful to proceed, that could be just on cold starts
     await this.serverHealthCheck();
 
-    return await executePythonCode(
-      { apiClient: this.client },
-      { code, should_save },
-    );
+    return await executePythonCode({ apiClient: this.client }, { code, should_save });
   }
 
   public async getLastOutputs(quantity: number) {

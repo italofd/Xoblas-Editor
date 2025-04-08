@@ -13,7 +13,19 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "max-len": ["error", { code: 100 }],
+      "max-len": [
+        "error",
+        {
+          code: 100,
+          tabWidth: 2,
+          comments: 120, // This ensures comments are also checked
+          ignoreUrls: true,
+          ignoreStrings: false,
+          ignoreTemplateLiterals: false,
+          ignoreRegExpLiterals: true,
+          ignorePattern: "className=(['\"`]([\\s\\S]*?)['\"`]|\\{[\\s\\S]*?\\})",
+        },
+      ],
     },
   },
 ];

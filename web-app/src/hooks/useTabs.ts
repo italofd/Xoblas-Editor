@@ -3,7 +3,8 @@ import { useState, MouseEvent as MouseEventType } from "react";
 
 /**
  * [TO-DO]: if we still have time left, refac for a object approach
- * Making it faster for operations like insertion and delete (or even update, but its not implemented)
+ * Making it faster for operations like insertion and delete
+ * (or even update, but its not implemented)
  */
 export const useTabs = () => {
   const [isLoadingOutputs, setIsLoadingOutputs] = useState<boolean>(false);
@@ -17,7 +18,8 @@ export const useTabs = () => {
   const addFiles = (db_files: typeof files) => {
     if (db_files.length > 0) {
       //We could do a adding but this would require a better design and other tweaks
-      //To prevent this work overhead im just erasing everything that was there (that prevent duplicated id as well)
+      //To prevent this work overhead im just erasing
+      //everything that was there (that prevent duplicated id as well)
       setFiles(db_files);
 
       activateFile(db_files.at(-1)!.id);
@@ -25,10 +27,7 @@ export const useTabs = () => {
   };
 
   // Close a file
-  const closeFile = (
-    id: string,
-    e: MouseEventType<HTMLButtonElement, MouseEvent>,
-  ) => {
+  const closeFile = (id: string, e: MouseEventType<HTMLButtonElement, MouseEvent>) => {
     e.stopPropagation();
     const fileToClose = files.find((file) => file.id === id);
 

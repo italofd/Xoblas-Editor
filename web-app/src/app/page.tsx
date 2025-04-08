@@ -5,7 +5,9 @@ export default function Home() {
     <div className="h-screen w-full overflow-auto">
       <h1 className="text-4xl py-6 lg:py-16 text-center">AQ-Take-Home</h1>
       <div className="flex h-full lg:h-[72%] w-[80%] mx-auto">
-        {/* Separated client logic on this div, if you need to follow with more server components down, pass a children to the MainSection*/}
+        {/* Separated client logic on this div, 
+        if you need to follow with more server components down, 
+        pass a children to the MainSection*/}
         <div className="h-full w-full">
           <CodeEditorMainSection />
         </div>

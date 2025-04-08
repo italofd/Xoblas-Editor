@@ -13,8 +13,7 @@ import Tabs from "../Tabs";
 
 export const CodeEditorMainSection = () => {
   const [isExecLoading, setIsExecLoading] = useState<boolean>(false);
-  const [executionResponse, setExecutionResponse] =
-    useState<PythonCodeDTO>(null);
+  const [executionResponse, setExecutionResponse] = useState<PythonCodeDTO>(null);
   const [shouldShowDialog, setShouldShowDialog] = useState(false);
   const editorRef = useRef<CodeEditorDTO>(null);
   const notificationRef = useRef<HTMLDialogElement>(null);
@@ -24,9 +23,7 @@ export const CodeEditorMainSection = () => {
   useEffect(() => {
     if (!notificationRef.current) return;
 
-    return shouldShowDialog
-      ? notificationRef.current.show()
-      : notificationRef.current.close();
+    return shouldShowDialog ? notificationRef.current.show() : notificationRef.current.close();
   }, [notificationRef, shouldShowDialog]);
 
   return (
@@ -54,10 +51,9 @@ export const CodeEditorMainSection = () => {
 
           <Tabs tabs={tabs}>
             <CodeOutputComponent isLoading={tabs.state.isLoadingOutputs}>
-              {/* We can safely pass a undefined because active file is being handled at the Tabs (main component) level */}
-              <p className=" text-blue-400 ">
-                {tabs?.state?.activeFile?.content}
-              </p>
+              {/* We can safely pass a undefined because 
+              active file is being handled at the Tabs (main component) level */}
+              <p className=" text-blue-400 ">{tabs?.state?.activeFile?.content}</p>
             </CodeOutputComponent>
           </Tabs>
         </div>

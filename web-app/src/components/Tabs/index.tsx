@@ -50,8 +50,8 @@ export default function Tabs({
 
       {/* Status bar */}
       <div className="px-6 py-1.5 text-sm text-blue-400 border-t border-gray-500 bg-zinc-800">
-        {activeFile ? `${activeFile.title} active` : "No file selected"} •{" "}
-        {files.length} file(s) open
+        {activeFile ? `${activeFile.title} active` : "No file selected"} • {files.length} file(s)
+        open
       </div>
     </div>
   );
