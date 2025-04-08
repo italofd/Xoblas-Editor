@@ -1,6 +1,5 @@
 import { ReactNode } from "react";
 import { Loader } from "../Loader";
-import { useTabs } from "@/hooks/useTabs";
 
 export const CodeOutputComponent = ({
   children,
@@ -10,7 +9,7 @@ export const CodeOutputComponent = ({
   isLoading: boolean;
 }) => {
   return (
-    <div className="h-full min-h-20 max-h-60 overflow-auto lg:max-h-full scrollbar-track:bg-slate-400 bg-zinc-950 p-4 rounded-md font-mono text-lg whitespace-pre-wrap">
+    <div className="h-full min-h-20 max-h-60 overflow-auto lg:max-h-full scrollbar-track:bg-slate-400 bg-zinc-950 p-4 rounded-md font-mono text-lg whitespace-pre-wrap break-words">
       {isLoading ? <Loader /> : children}
     </div>
   );
@@ -27,7 +26,7 @@ export const OutputLayout = ({
 }) => {
   return (
     <>
-      {showHeader && <h2 className="text-lg font-semibold mb-2">Output</h2>}
+      {showHeader && <h2 className="text-lg font-semibold">Output</h2>}
       <CodeOutputComponent isLoading={isLoading}>
         {children}
       </CodeOutputComponent>

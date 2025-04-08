@@ -17,7 +17,7 @@ export default function Tabs({
     <div className="flex flex-col h-1/2 border border-zinc-600 rounded shadow-md">
       {/* Header with tabs */}
       <div className="flex items-center justify-between bg-zinc-800 border-b border-gray-600">
-        <h2 className="text-lg font-semibold ml-6">Last Saved</h2>
+        <h2 className="text-lg font-semibold ml-6 my-1">Last Saved</h2>
         <div className="flex overflow-x-auto">
           {files.map((file) => (
             <div
@@ -49,7 +49,7 @@ export default function Tabs({
       </div>
 
       {/* Status bar */}
-      <div className="px-4 py-1 text-sm text-blue-400 border-t border-gray-500 bg-zinc-800">
+      <div className="px-6 py-1.5 text-sm text-blue-400 border-t border-gray-500 bg-zinc-800">
         {activeFile ? `${activeFile.title} active` : "No file selected"} •{" "}
         {files.length} file(s) open
       </div>

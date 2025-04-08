@@ -16,10 +16,10 @@ export const useTabs = () => {
   // Add a new file
   const addFiles = (db_files: typeof files) => {
     if (db_files.length > 0) {
-      setFiles((prev) =>
-        //Make previous unactive and add new
-        prev.map((file) => ({ ...file, active: false })).concat(db_files),
-      );
+      //We could do a adding but this would require a better design and other tweaks
+      //To prevent this work overhead im just erasing everything that was there (that prevent duplicated id as well)
+      setFiles(db_files);
+
       activateFile(db_files.at(-1)!.id);
     }
   };
