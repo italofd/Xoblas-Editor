@@ -11,15 +11,9 @@ export const apiClient = (baseUrl: string) => {
     return config;
   });
 
-  const get = async <R>(
-    url: string,
-    config?: AxiosRequestConfig,
-  ): Promise<R> => {
+  const get = async <R>(url: string, config?: AxiosRequestConfig): Promise<R> => {
     try {
-      const response: AxiosResponse<R> = await axios.get(
-        `${baseUrl}${url}`,
-        config,
-      );
+      const response: AxiosResponse<R> = await axios.get(`${baseUrl}${url}`, config);
 
       return response.data;
     } catch (error) {
@@ -33,11 +27,7 @@ export const apiClient = (baseUrl: string) => {
     config?: AxiosRequestConfig,
   ): Promise<{ data: Response; status: number }> => {
     try {
-      const response: AxiosResponse<Response> = await axios.post(
-        `${baseUrl}${url}`,
-        data,
-        config,
-      );
+      const response: AxiosResponse<Response> = await axios.post(`${baseUrl}${url}`, data, config);
 
       return { data: response.data, status: response.status };
     } catch (error) {
