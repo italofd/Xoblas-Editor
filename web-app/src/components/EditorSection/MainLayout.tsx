@@ -3,6 +3,7 @@ import { CodeEditorFooter } from "./CodeEditorFooter";
 import { SetIsExecLoading, SetExecutionResponse } from "@/types/api";
 import { CodeEditorRef } from "@/types/editor";
 import { SetShouldShowDialog } from "@/types/components";
+import { AddOutputFiles, SetIsLoadingOutputs } from "@/types/tabs";
 
 export const MainLayout = ({
   children,
@@ -17,10 +18,17 @@ export const MainLayout = ({
     setExecutionResponse: SetExecutionResponse;
     setIsExecLoading: SetIsExecLoading;
     setShouldShowDialog: SetShouldShowDialog;
+    setIsLoadingOutputs: SetIsLoadingOutputs;
+    addOutputFiles: AddOutputFiles;
   };
 }) => {
-  const { setExecutionResponse, setIsExecLoading, setShouldShowDialog } =
-    setters;
+  const {
+    setExecutionResponse,
+    setIsExecLoading,
+    setShouldShowDialog,
+    addOutputFiles,
+    setIsLoadingOutputs,
+  } = setters;
 
   return (
     <div className="w-full h-full min-w-[40%] flex bg-zinc-900 text-zinc-100 p-4 md:p-8">
@@ -42,6 +50,8 @@ export const MainLayout = ({
             setExecutionResponse={setExecutionResponse}
             setIsExecLoading={setIsExecLoading}
             setShouldShowDialog={setShouldShowDialog}
+            setIsLoadingOutputs={setIsLoadingOutputs}
+            addOutputFiles={addOutputFiles}
           />
         </div>
       </div>

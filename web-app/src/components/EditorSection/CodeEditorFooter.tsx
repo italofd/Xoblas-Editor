@@ -1,7 +1,7 @@
 "use client";
 
-// import { ApiHandlers } from "@/api";
 import { onExecutePythonCode } from "@/handlers/onExecutePythonCode";
+import { onGetLastOutputs } from "@/handlers/onGetLastOutputs";
 import {
   PythonCodeDTO,
   SetIsExecLoading,
@@ -9,6 +9,7 @@ import {
 } from "@/types/api";
 import { SetShouldShowDialog } from "@/types/components";
 import { CodeEditorRef } from "@/types/editor";
+import { AddOutputFiles, SetIsLoadingOutputs } from "@/types/tabs";
 
 const baseStyle =
   "px-4 py-2 rounded-md flex items-center disabled:animate-pulse";
@@ -19,13 +20,18 @@ export const CodeEditorFooter = ({
   setExecutionResponse,
   setIsExecLoading,
   setShouldShowDialog,
+  setIsLoadingOutputs,
+  addOutputFiles,
 }: {
   monacoRef: CodeEditorRef;
   isExecLoading: boolean;
   setExecutionResponse: SetExecutionResponse;
   setIsExecLoading: SetIsExecLoading;
   setShouldShowDialog: SetShouldShowDialog;
+  setIsLoadingOutputs: SetIsLoadingOutputs;
+  addOutputFiles: AddOutputFiles;
 }) => {
+  //[TO-DO]: Move this functions to somewhere else
   const onClick = async (shouldSave: boolean) => {
     if (!monacoRef.current) return;
 
@@ -50,8 +56,15 @@ export const CodeEditorFooter = ({
   };
 
   const getLastOutputs = async () => {
-    // const res = await new ApiHandlers().getLastOutputs(5);
-    //[TO-DO]: Add set state and do something with the outputs
+    try {
+      setIsLoadingOutputs(true);
+
+      await onGetLastOutputs({ addFiles: addOutputFiles });
+    } catch (error) {
+      throw error;
+    } finally {
+      setIsLoadingOutputs(false);
+    }
   };
 
   return (
@@ -75,7 +88,7 @@ export const CodeEditorFooter = ({
       <button
         onClick={async () => await getLastOutputs()}
         disabled={isExecLoading}
-        className={`${baseStyle} justify-center border-green-700 border-1 hover:bg-green-700 transition-discrete disabled:animate-pulse`}
+        className={`${baseStyle} justify-center border-blue-500 border-1 hover:bg-blue-500 transition-discrete disabled:animate-pulse`}
       >
         Get Last Outputs
       </button>

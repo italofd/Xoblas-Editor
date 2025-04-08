@@ -1,4 +1,5 @@
 import { ApiClient } from "@/types/api";
+import { OutputCodeDBSchema } from "@/types/db";
 
 export const getLastOutputs = async (
   deps: { apiClient: ApiClient },
@@ -8,7 +9,7 @@ export const getLastOutputs = async (
 ) => {
   const { data } = await deps.apiClient.post<
     { quantity: number },
-    { outputs: Array<string> }
+    { outputs: Array<OutputCodeDBSchema> }
   >("/get_outputs", { quantity: params.quantity });
 
   return data;
