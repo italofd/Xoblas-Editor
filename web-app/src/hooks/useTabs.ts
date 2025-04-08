@@ -14,7 +14,6 @@ export const useTabs = () => {
   //[To-do]: Memoize this value =)
   const activeFile = files.find((file) => file.active);
 
-  // Add a new file
   const addFiles = (db_files: typeof files) => {
     if (db_files.length > 0) {
       //We could do a adding but this would require a better design and other tweaks
@@ -26,7 +25,6 @@ export const useTabs = () => {
     }
   };
 
-  // Close a file
   const closeFile = (id: string, e: MouseEventType<HTMLButtonElement, MouseEvent>) => {
     e.stopPropagation();
     const fileToClose = files.find((file) => file.id === id);

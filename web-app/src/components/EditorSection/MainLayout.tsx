@@ -1,8 +1,7 @@
 import { ReactNode } from "react";
 import { CodeEditorFooter } from "./CodeEditorFooter";
-import { SetIsExecLoading, SetExecutionResponse } from "@/types/api";
 import { CodeEditorRef } from "@/types/editor";
-import { SetShouldShowDialog } from "@/types/components";
+import { SetExecutionResponse, SetIsExecLoading, SetShouldShowDialog } from "@/types/components";
 import { AddOutputFiles, SetIsLoadingOutputs } from "@/types/tabs";
 
 export const MainLayout = ({

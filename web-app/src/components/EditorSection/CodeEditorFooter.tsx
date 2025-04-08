@@ -2,8 +2,12 @@
 
 import { onExecutePythonCode } from "@/handlers/onExecutePythonCode";
 import { onGetLastOutputs } from "@/handlers/onGetLastOutputs";
-import { PythonCodeDTO, SetIsExecLoading, SetExecutionResponse } from "@/types/api";
-import { SetShouldShowDialog } from "@/types/components";
+import {
+  PythonCodeDTO,
+  SetExecutionResponse,
+  SetIsExecLoading,
+  SetShouldShowDialog,
+} from "@/types/components";
 import { CodeEditorRef } from "@/types/editor";
 import { AddOutputFiles, SetIsLoadingOutputs } from "@/types/tabs";
 

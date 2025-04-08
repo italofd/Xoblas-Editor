@@ -1,6 +1,5 @@
-import { SetExecutionResponse } from "@/types/api";
 import { ApiHandlers } from "../api";
-import { SetShouldShowDialog } from "@/types/components";
+import { SetExecutionResponse, SetShouldShowDialog } from "@/types/components";
 
 export const onExecutePythonCode = async (
   setExecutionResponse: SetExecutionResponse,

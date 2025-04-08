@@ -3,18 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 
 import { CodeEditor } from "@/components/EditorSection/CodeEditor";
-import { PythonCodeDTO } from "@/types/api";
 import { MainLayout } from "./MainLayout";
 import { CodeOutputComponent, OutputLayout } from "./OutputLayout";
 import { CodeEditorDTO } from "@/types/editor";
 import { Notification } from "../Notification";
 import { useTabs } from "@/hooks/useTabs";
 import Tabs from "../Tabs";
+import { PythonCodeDTO } from "@/types/components";
 
 export const CodeEditorMainSection = () => {
   const [isExecLoading, setIsExecLoading] = useState<boolean>(false);
   const [executionResponse, setExecutionResponse] = useState<PythonCodeDTO>(null);
+
   const [shouldShowDialog, setShouldShowDialog] = useState(false);
+
   const editorRef = useRef<CodeEditorDTO>(null);
   const notificationRef = useRef<HTMLDialogElement>(null);
 

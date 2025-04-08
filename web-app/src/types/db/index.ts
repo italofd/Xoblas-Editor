@@ -5,4 +5,5 @@ export type OutputCodeDBSchema = {
   executable_id: string;
   //The actual python output =)
   output: string;
+  timestamp: number;
 };

@@ -1,4 +1,4 @@
-import { ApiClient, ExecuteRequestBody } from "@/types/api";
+import { ApiClient, ExecuteRequestBody, ExecuteRequestResponse } from "@/types/api";
 import axios from "axios";
 
 export const executePythonCode = async (
@@ -12,13 +12,13 @@ export const executePythonCode = async (
   let wasInserted: boolean = false;
 
   try {
-    const { data, status } = await apiClient.post<
-      ExecuteRequestBody,
-      { message: string; code_output?: string }
-    >("/execute", {
-      code,
-      should_save,
-    });
+    const { data, status } = await apiClient.post<ExecuteRequestBody, ExecuteRequestResponse>(
+      "/execute",
+      {
+        code,
+        should_save,
+      },
+    );
 
     output = data.code_output ? data.code_output : data.message;
     wasInserted = status === 201;

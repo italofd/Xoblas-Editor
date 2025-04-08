@@ -1,16 +1,13 @@
-import { ApiClient } from "@/types/api";
-import { OutputCodeDBSchema } from "@/types/db";
+import { ApiClient, GetLastOutputsBody, GetLastOutputsResponse } from "@/types/api";
 
 export const getLastOutputs = async (
   deps: { apiClient: ApiClient },
-  params: {
-    quantity: number;
-  },
+  params: GetLastOutputsBody,
 ) => {
-  const { data } = await deps.apiClient.post<
-    { quantity: number },
-    { outputs: Array<OutputCodeDBSchema> }
-  >("/get_outputs", { quantity: params.quantity });
+  const { data } = await deps.apiClient.post<GetLastOutputsBody, GetLastOutputsResponse>(
+    "/get_outputs",
+    { quantity: params.quantity },
+  );
 
   return data;
 };

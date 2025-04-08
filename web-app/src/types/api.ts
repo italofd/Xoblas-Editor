@@ -1,19 +1,24 @@
 import { apiClient } from "@/api/client";
-import { Dispatch, SetStateAction } from "react";
+import { OutputCodeDBSchema } from "./db";
 
 export interface ExecuteRequestBody {
   code: string;
   should_save: boolean;
 }
 
+export interface ExecuteRequestResponse {
+  message: string;
+  code_output?: string;
+}
+
+export interface GetLastOutputsBody {
+  quantity: number;
+}
+
+export interface GetLastOutputsResponse {
+  outputs: Array<OutputCodeDBSchema>;
+}
+
 export type PingRequestBody = null;
-
-export type PythonCodeDTO = string | null;
-
-//React
-export type SetExecutionResponse = Dispatch<SetStateAction<PythonCodeDTO>>;
-
-export type SetIsExecLoading = Dispatch<SetStateAction<boolean>>;
-//
 
 export type ApiClient = ReturnType<typeof apiClient>;
