@@ -1,6 +1,7 @@
 import psycopg
 import os
 import uuid
+import time
 
 from typing import Optional, Union, Dict
 
@@ -86,6 +87,7 @@ class PostgreSQLClient:
                     id TEXT PRIMARY KEY,
                     executable_id TEXT NOT NULL,
                     output TEXT,
+                    timestamp INTEGER,
                     FOREIGN KEY (executable_id) REFERENCES executable (id)
                 )
                 """
@@ -115,8 +117,8 @@ class PostgreSQLClient:
             )
 
             self.execute_query(
-                "INSERT INTO output_code (id, executable_id, output) VALUES (%s, %s, %s)",
-                (output_id, executable_id, output),
+                "INSERT INTO output_code (id, executable_id, output, timestamp) VALUES (%s, %s, %s, %s)",
+                (output_id, executable_id, output, time.time()),
             )
 
             print("Successfully added code and output into SQL table")

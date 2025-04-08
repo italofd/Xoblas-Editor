@@ -34,6 +34,7 @@ async def get_outputs(
         FROM executable e
         INNER JOIN output_code oc ON e.ID = oc.executable_id
         WHERE e.user_id = %s 
+        ORDER BY oc.timestamp DESC
         LIMIT %s
             """,
             (user_id, quantity),
