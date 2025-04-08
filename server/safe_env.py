@@ -9,7 +9,7 @@ def cap_resources():
 
     # This set of rules should prevent resource exaustion
     # Limits in Order: CPU computing time, Memory capacity
-    resource.setrlimit(resource.RLIMIT_CPU, (2, 2))
+    resource.setrlimit(resource.RLIMIT_CPU, (1, 1))
     resource.setrlimit(resource.RLIMIT_AS, (_MEMORY_CAP_, _MEMORY_CAP_))
 
 
