@@ -45,6 +45,4 @@ mydataset = {"cars": ["BMW", "Volvo", "Ford"], "passings": [3, 7, 2]}
 
 @app.get("/")
 async def root():
-    # This is just a test to see if all the libraries are working as expected
-    # Remove when building the complete version =)
     return "Tenha Fé, Pois Amanhã Um Lindo Dia Vai Nascer - Originais do Samba"
