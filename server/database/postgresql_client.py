@@ -86,8 +86,8 @@ class PostgreSQLClient:
                 CREATE TABLE IF NOT EXISTS output_code (
                     id TEXT PRIMARY KEY,
                     executable_id TEXT NOT NULL,
-                    output TEXT,
-                    timestamp INTEGER,
+                    output TEXT NOT NULL,
+                    timestamp INTEGER NOT NULL,
                     FOREIGN KEY (executable_id) REFERENCES executable (id)
                 )
                 """
@@ -110,7 +110,6 @@ class PostgreSQLClient:
             executable_id = self.generate_uuid()
             output_id = self.generate_uuid()
 
-            # [TO-DO]: Create types that match database ones to keep server and database in sync with contracts
             self.execute_query(
                 "INSERT INTO executable (id, code, user_id) VALUES (%s, %s, %s)",
                 (executable_id, code, userId),

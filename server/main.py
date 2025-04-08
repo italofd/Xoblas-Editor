@@ -1,11 +1,10 @@
+import os
+
 from dotenv import load_dotenv
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-
-from scipy import constants
-import pandas
 
 from routers import ping, execute, get_outputs
 from database.postgresql_client import PostgreSQLInstance
@@ -15,12 +14,17 @@ load_dotenv()
 
 app = FastAPI()
 
-# [TO-DO]: Make this be dynamically targeting depending if its local or prod
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    "https://aq-take-home.vercel.app",
-]
+
+origins = (
+    [
+        "http://localhost",
+        "http://localhost:3000",
+    ]
+    if os.getenv("ENV") != "prod"
+    else [
+        "https://aq-take-home.vercel.app",
+    ]
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -43,4 +47,4 @@ mydataset = {"cars": ["BMW", "Volvo", "Ford"], "passings": [3, 7, 2]}
 async def root():
     # This is just a test to see if all the libraries are working as expected
     # Remove when building the complete version =)
-    return {f"message: Hello World {constants.liter} {pandas.DataFrame(mydataset)}"}
+    return "Tenha Fé, Pois Amanhã Um Lindo Dia Vai Nascer - Originais do Samba"

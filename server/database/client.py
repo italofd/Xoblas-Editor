@@ -17,7 +17,6 @@ class SQLiteClient:
         self.connect()
 
         # Create tables if they don't exist
-        # [TO-DO]: Move this to a separated function that runs once the server is live
         self.create_tables()
 
     def connect(self) -> bool:
@@ -90,7 +89,6 @@ class SQLiteClient:
             executable_id = self.generate_uuid()
             output_id = self.generate_uuid()
 
-            # [TO-DO]: Create types that match database ones to keep server and database in sync with contracts
             self.execute_query(
                 "INSERT INTO executable (id, code) VALUES (?, ?)", (executable_id, code)
             )

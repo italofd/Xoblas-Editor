@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header
 from database.postgresql_client import PostgreSQLInstance
-from pydantic import BaseModel
+from routers.schemas.output_schemas import GetOutputsBody, GetOutputsResponse
 
 
 from typing import Annotated
@@ -9,17 +9,13 @@ from typing import Annotated
 router = APIRouter()
 
 
-class GetOutputsBody(BaseModel):
-    quantity: int
-
-
 @router.post(
     "/get_outputs",
     tags=["outputs"],
     name="Get Outputs",
     description="Use this endpoint to retrieve a number of your recent last inputs",
     status_code=200,
-    # [TO-DO]: add response schema
+    response_model=GetOutputsResponse,
 )
 async def get_outputs(
     body: GetOutputsBody,
@@ -28,7 +24,7 @@ async def get_outputs(
     quantity = body.quantity
 
     try:
-        result = PostgreSQLInstance.execute_query(
+        result: GetOutputsResponse = PostgreSQLInstance.execute_query(
             """ 
         SELECT oc.*
         FROM executable e
@@ -39,9 +35,6 @@ async def get_outputs(
             """,
             (user_id, quantity),
         )
-
-        for row in result:
-            print(row)
 
         return {"outputs": result}
     except Exception as e:
