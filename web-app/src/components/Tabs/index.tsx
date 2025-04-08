@@ -17,7 +17,7 @@ export default function Tabs({
     <div className="flex flex-col h-1/2 border border-zinc-600 rounded shadow-md">
       {/* Header with tabs */}
       <div className="flex items-center justify-between bg-zinc-800 border-b border-gray-600">
-        <h2 className="text-lg font-semibold ml-6 my-1">Last Saved</h2>
+        <h2 className="text-lg font-semibold ml-6 my-1">Stored</h2>
         <div className="flex overflow-x-auto">
           {files.map((file) => (
             <div
