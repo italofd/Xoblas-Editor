@@ -19,6 +19,7 @@ def run_client_code(code: str):
             capture_output=True,
             text=True,
             check=False,
+            timeout=5,
             env={},
         )
 
