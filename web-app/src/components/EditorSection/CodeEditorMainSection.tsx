@@ -11,6 +11,9 @@ import { useTabs } from "@/hooks/useTabs";
 import Tabs from "../Tabs";
 import { PythonCodeDTO } from "@/types/components";
 
+import "../Terminal/terminal.css";
+import { XTerminal } from "../Terminal";
+
 export const CodeEditorMainSection = () => {
   const [isExecLoading, setIsExecLoading] = useState<boolean>(false);
   const [executionResponse, setExecutionResponse] = useState<PythonCodeDTO>(null);
@@ -60,6 +63,7 @@ export const CodeEditorMainSection = () => {
           </Tabs>
         </div>
       </div>
+      <XTerminal />
 
       <Notification
         message="Your code and his output was stored into the database"
