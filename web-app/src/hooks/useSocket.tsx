@@ -9,6 +9,7 @@ export const useSocket = () => {
 
     // Connection opened
     webSocket.addEventListener("open", (event) => {
+      //[TO-DO]: Implement ACK
       // webSocket.send("Connection established");
     });
 

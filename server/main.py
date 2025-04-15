@@ -6,8 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-from routers import ping, execute, get_outputs
-from database.postgresql_client import PostgreSQLInstance
+from routers import ping, execute, get_outputs, web_socket
 
 
 load_dotenv()
@@ -38,9 +37,7 @@ app.add_middleware(
 app.include_router(ping.router)
 app.include_router(execute.router)
 app.include_router(get_outputs.router)
-
-
-mydataset = {"cars": ["BMW", "Volvo", "Ford"], "passings": [3, 7, 2]}
+app.include_router(web_socket.router)
 
 
 @app.get("/")
