@@ -10,7 +10,7 @@ import { getLastOutputs } from "./functions/getLastOutputs";
 export class ApiHandlers {
   private client: ApiClient;
 
-  constructor(API_BASE_URL = getServerURL()) {
+  constructor(API_BASE_URL = getServerURL("http")) {
     this.client = apiClient(API_BASE_URL);
   }
 
