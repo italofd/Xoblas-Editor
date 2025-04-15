@@ -36,7 +36,7 @@ async def ws_terminal(websocket: WebSocket):
             # Write command to shell
             result = await shell.execute(data)
 
-            await websocket.send_text(result)
+            await websocket.send_json(result)
 
     except Exception as e:
         print(f"Terminal error: {e}")

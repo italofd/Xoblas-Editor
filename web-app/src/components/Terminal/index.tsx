@@ -5,10 +5,10 @@ import { useTerminal } from "@/hooks/useXterm";
 import { useXTerm } from "react-xtermjs";
 
 export const XTerminal = () => {
-  const { socket } = useSocket();
   const { instance, ref } = useXTerm();
+  const { socket, wsData } = useSocket();
 
-  useTerminal(instance, ref, socket);
+  useTerminal(instance, ref, socket, wsData);
 
   return (
     <div className="w-full flex flex-col">

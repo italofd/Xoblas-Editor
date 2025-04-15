@@ -5,6 +5,7 @@ import fcntl
 import signal
 import re
 import asyncio
+from typing import Dict
 
 
 # A class to handle PTY shell
@@ -35,13 +36,23 @@ class PtyShell:
             # Give the shell a moment to initialize
             await asyncio.sleep(0.1)
 
-            # Set custom prompt
-            await self.write('export PS1="__MY_PROMPT__$ "\n')
-
-            # Wait until the new prompt is visible
-            self.prompt = "__MY_PROMPT__$"
+            await self.write('export PS1="__START__\\u@\\h:\\w__END__$ "\n')
+            self.prompt = "__END__$"
 
             self.last_output = await self.read_until_prompt()
+
+    def parse_prompt_info(self, output: str) -> Dict[str, str]:
+        """Extract user and working directory from the prompt."""
+        match = re.search(r"__START__(.+?)__END__", output)
+        if match:
+            prompt_content = match.group(1)  # e.g., "user@host:/home/user"
+            try:
+                user_host, cwd = prompt_content.split(":", 1)
+                user, host = user_host.split("@")
+                return {"user": user, "host": host, "cwd": cwd}
+            except ValueError:
+                return {}
+        return {}
 
     def _strip_ansi_codes(self, text: str) -> str:
         """Remove ANSI escape sequences from text."""
@@ -73,27 +84,33 @@ class PtyShell:
 
         return output
 
-    async def execute(self, command: str) -> str:
+    async def execute(self, command: str) -> Dict[str, str]:
         await self.write(command + "\n")
-
         output = await self.read_until_prompt()
 
-        # Split into lines and clean
+        # Extract and remove prompt and echoed command
         lines = output.splitlines()
 
-        # Remove the first prompt if it's printed before command
-        if lines and self.prompt and lines[0].strip().endswith(self.prompt.strip()):
-            lines = lines[1:]
+        # Detect prompt line
+        prompt_info = self.parse_prompt_info(output)
+
+        # Remove the prompt lines from output
+        lines = [
+            line for line in lines if "__START__" not in line and "__END__" not in line
+        ]
 
         # Remove echoed command
         if lines and lines[0].strip() == command.strip():
             lines = lines[1:]
 
-        # Remove trailing prompt
-        if lines and self.prompt and lines[-1].strip().endswith(self.prompt.strip()):
-            lines = lines[:-1]
+        cleaned_output = "\n".join(lines).strip()
 
-        return "\n".join(lines).strip()
+        return {
+            "output": cleaned_output,
+            "cwd": prompt_info.get("cwd", ""),
+            "user": prompt_info.get("user", ""),
+            "host": prompt_info.get("host", ""),
+        }
 
     def is_alive(self) -> bool:
         """Check if the shell process is still alive."""

@@ -2,10 +2,15 @@ import { Terminal } from "@xterm/xterm";
 import { RefObject, useEffect } from "react";
 import { useSocket } from "./useSocket";
 
+const green = "\x1b[32m";
+const blue = "\x1b[34m";
+const reset = "\x1b[0m";
+
 export const useTerminal = (
   terminal: Terminal | null,
   ref: RefObject<HTMLDivElement>,
   socket: ReturnType<typeof useSocket>["socket"],
+  wsData: ReturnType<typeof useSocket>["wsData"],
 ) => {
   useEffect(() => {
     if (terminal && socket && ref.current) {
@@ -19,7 +24,6 @@ export const useTerminal = (
       const handleCommand = (command: string, terminal: Terminal) => {
         //[TO-DO]: Treat case where its not connected by displaying a error or trying a reconnection
         if (socket.current && socket.current.readyState === WebSocket.OPEN) {
-          console.log("EVA01", command, socket.current);
           socket.current.send(command);
           //[TO-DO]: Receive response and display, implement path for working directory
         } else {
@@ -30,12 +34,11 @@ export const useTerminal = (
       terminal.onKey(({ key, domEvent }) => {
         const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
 
-        // Handle Enter key
+        // Handle Enter key (executing a command)
         if (domEvent.key === "Enter") {
           terminal.writeln("");
           handleCommand(currentLine, terminal);
           currentLine = "";
-          terminal.write("$ ");
         }
 
         // Handle regular Backspace
@@ -62,4 +65,16 @@ export const useTerminal = (
       };
     }
   }, [terminal, ref, socket]);
+
+  //Handles new income of data coming trough websocket
+  useEffect(() => {
+    if (wsData && terminal) {
+      terminal.writeln(wsData.output);
+
+      //Insert the same bash pattern, show current working directory
+      terminal.write(
+        `[${green}${wsData.user}@${wsData.host}${reset} ${blue}${wsData.cwd}${reset}]$ `,
+      );
+    }
+  }, [wsData, terminal]);
 };
