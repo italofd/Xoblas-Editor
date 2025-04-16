@@ -69,6 +69,7 @@
 
 .xterm .xterm-screen {
   position: relative;
+  padding-right: 16px;
 }
 
 .xterm .xterm-screen canvas {

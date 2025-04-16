@@ -54,6 +54,8 @@ class PtyShell:
                 return {}
         return {}
 
+    # Currently unused, XTerm handles ANSI characters automatically =)
+    # Striping would only cause it to be unreliable on the UI Outputs
     def _strip_ansi_codes(self, text: str) -> str:
         """Remove ANSI escape sequences from text."""
 
@@ -73,11 +75,10 @@ class PtyShell:
             r, _, _ = select.select([self.fd], [], [], 0.1)
             if r:
                 chunk = os.read(self.fd, 4096).decode()
-                chunk_clean = self._strip_ansi_codes(chunk)
-                output += chunk_clean
+                output += chunk
 
                 # Look for our custom prompt
-                if "__MY_PROMPT__$" in chunk_clean:
+                if "__MY_PROMPT__$" in chunk:
                     break
 
             await asyncio.sleep(0.05)
