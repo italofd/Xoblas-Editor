@@ -45,6 +45,9 @@ class PtyShell:
             await asyncio.sleep(0.1)
 
             await self.write('export PS1="__START__\\u@\\h:\\w__END__$ "\n')
+
+            await self.write("export TERM=xterm-256color\n")
+
             self.prompt = "__END__$"
 
             self.last_output = await self.read_until_prompt()
@@ -64,19 +67,35 @@ class PtyShell:
 
     async def resize(self, rows: int, cols: int) -> None:
         if self.fd is not None:
-            # Create the window size structure (rows, cols, xpixel, ypixel)
-            # xpixel and ypixel are typically set to 0 when only character dimensions matter
-            winsize = struct.pack("HHHH", rows, cols, 0, 0)
+            self.rows = rows
+            self.cols = cols
 
-            # Set the window size using TIOCSWINSZ ioctl
+            # Create the window size structure
+            winsize = struct.pack("HHHH", rows, cols, 0, 0)
             fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
 
-            # If the process is running, send SIGWINCH to notify it of the size change
             if self.pid is not None and self.is_alive():
                 try:
                     os.kill(self.pid, signal.SIGWINCH)
+
+                    # Send the stty command
+                    await self.write(f"stty columns {cols} rows {rows}\n")
+
+                    # Important: Add a small delay
+                    await asyncio.sleep(0.1)
+
+                    # Clear the buffer by reading all pending output
+                    try:
+                        while True:
+                            r, _, _ = select.select([self.fd], [], [], 0.05)
+                            if not r:
+                                break
+                            os.read(self.fd, 4096)
+                    except (OSError, BlockingIOError):
+                        pass
+
                 except ProcessLookupError:
-                    pass  # Process might have terminated
+                    pass
 
     async def write(self, data: str) -> None:
         """Write raw data to the PTY."""

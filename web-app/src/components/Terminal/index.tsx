@@ -13,6 +13,7 @@ export const XTerminal = () => {
 
   const { onResize } = useTerminal(instance, ref, socket, wsData);
 
+  //Resize Observer
   useEffect(() => {
     if (!ref.current || !charRef.current) return;
 

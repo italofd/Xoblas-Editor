@@ -19,6 +19,9 @@ export const useTerminal = (
     if (terminal && socket && ref.current) {
       //Load addon and use it
       terminal.loadAddon(fitAddon);
+      terminal.options["convertEol"] = true;
+      terminal.options["fontFamily"] = "monospace";
+      terminal.options["cursorBlink"] = true;
 
       fitAddon.fit();
 

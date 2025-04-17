@@ -38,8 +38,6 @@ async def ws_terminal(websocket: WebSocket):
 
             req_type = json_data.get("type")
 
-            print(req_type)
-
             if req_type == "command":
                 # Write command to shell
                 result = await shell.execute(json_data.get("command"))
@@ -47,8 +45,6 @@ async def ws_terminal(websocket: WebSocket):
                 await websocket.send_json(result)
             else:
                 _, cols, rows = json_data.values()
-
-                print(cols, rows)
 
                 await shell.resize(rows, cols)
 
