@@ -40,7 +40,7 @@ export const createPrompt = (cols: number, wsData: WsData) => {
 export const handleCommand = (command: string, terminal: Terminal | null, socket: Socket) => {
   //[TO-DO]: Treat case where its not connected by displaying a error or trying a reconnection
   if (socket.current && socket.current.readyState === WebSocket.OPEN) {
-    socket.current.send(command);
+    socket.current.send(JSON.stringify({ type: "command", command }));
 
     //[TO-DO]: Receive response and display, implement path for working directory
   } else if (terminal) {

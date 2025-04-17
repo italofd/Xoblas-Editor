@@ -28,6 +28,7 @@ export const useSocket = () => {
 
       if (event.data) {
         const parsedJson: WsMessage = JSON.parse(event.data);
+
         setWsData(parsedJson);
       }
     });

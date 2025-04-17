@@ -9,32 +9,15 @@ export const XTerminal = () => {
   const { instance, ref } = useXTerm();
   const { socket, wsData } = useSocket();
   const charRef = useRef<HTMLDivElement>(null);
-  const lastSizeRef = useRef({ cols: 0, rows: 0 }); // 👈 tracked via ref
+  const lastSizeRef = useRef({ cols: 0, rows: 0 });
 
   const { onResize } = useTerminal(instance, ref, socket, wsData);
 
   useEffect(() => {
     if (!ref.current || !charRef.current) return;
 
-    const charRect = charRef.current.getBoundingClientRect();
-    const charWidth = charRect.width;
-    const charHeight = charRect.height;
-
-    if (charWidth === 0 || charHeight === 0) return;
-
     const resizeObserver = new ResizeObserver(() => {
-      const containerRect = ref.current!.getBoundingClientRect();
-
-      const cols = Math.floor(containerRect.width / charWidth);
-      const rows = Math.floor(containerRect.height / charHeight);
-
-      const last = lastSizeRef.current;
-      const changed = cols !== last.cols || rows !== last.rows;
-
-      if (changed) {
-        lastSizeRef.current = { cols, rows };
-        onResize({ cols, rows });
-      }
+      onResize(lastSizeRef);
     });
 
     resizeObserver.observe(ref.current);

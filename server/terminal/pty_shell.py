@@ -6,6 +6,8 @@ import signal
 import re
 import asyncio
 from typing import Dict
+import termios
+import struct
 
 
 # A class to handle PTY shell
@@ -26,7 +28,13 @@ class PtyShell:
 
         if self.pid == 0:  # Child process
             # Execute the shell
-            os.execv(self.shell_path, [self.shell_path])
+            os.execv(
+                self.shell_path,
+                [
+                    self.shell_path,
+                ],
+            )
+
         else:  # Parent process
 
             # Make the PTY non-blocking
@@ -54,14 +62,21 @@ class PtyShell:
                 return {}
         return {}
 
-    # Currently unused, XTerm handles ANSI characters automatically =)
-    # Striping would only cause it to be unreliable on the UI Outputs
-    def _strip_ansi_codes(self, text: str) -> str:
-        """Remove ANSI escape sequences from text."""
+    async def resize(self, rows: int, cols: int) -> None:
+        if self.fd is not None:
+            # Create the window size structure (rows, cols, xpixel, ypixel)
+            # xpixel and ypixel are typically set to 0 when only character dimensions matter
+            winsize = struct.pack("HHHH", rows, cols, 0, 0)
 
-        # This pattern matches ANSI escape sequences
-        ansi_pattern = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-        return ansi_pattern.sub("", text)
+            # Set the window size using TIOCSWINSZ ioctl
+            fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
+
+            # If the process is running, send SIGWINCH to notify it of the size change
+            if self.pid is not None and self.is_alive():
+                try:
+                    os.kill(self.pid, signal.SIGWINCH)
+                except ProcessLookupError:
+                    pass  # Process might have terminated
 
     async def write(self, data: str) -> None:
         """Write raw data to the PTY."""
@@ -74,7 +89,7 @@ class PtyShell:
         while asyncio.get_event_loop().time() < end_time:
             r, _, _ = select.select([self.fd], [], [], 0.1)
             if r:
-                chunk = os.read(self.fd, 4096).decode()
+                chunk = os.read(self.fd, 4096).decode(errors="replace")
                 output += chunk
 
                 # Look for our custom prompt

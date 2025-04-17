@@ -2,6 +2,7 @@ from fastapi import WebSocket, APIRouter
 from typing import Dict
 import uuid
 from terminal.pty_shell import PtyShell
+import json
 
 # Dictionary to store active terminal sessions
 active_terminals: Dict[str, PtyShell] = {}
@@ -33,10 +34,23 @@ async def ws_terminal(websocket: WebSocket):
             # Receive command from client
             data = await websocket.receive_text()
 
-            # Write command to shell
-            result = await shell.execute(data)
+            json_data = json.loads(data)
 
-            await websocket.send_json(result)
+            req_type = json_data.get("type")
+
+            print(req_type)
+
+            if req_type == "command":
+                # Write command to shell
+                result = await shell.execute(json_data.get("command"))
+
+                await websocket.send_json(result)
+            else:
+                _, cols, rows = json_data.values()
+
+                print(cols, rows)
+
+                await shell.resize(rows, cols)
 
     except Exception as e:
         print(f"Terminal error: {e}")

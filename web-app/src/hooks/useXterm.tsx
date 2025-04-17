@@ -19,6 +19,7 @@ export const useTerminal = (
     if (terminal && socket && ref.current) {
       //Load addon and use it
       terminal.loadAddon(fitAddon);
+
       fitAddon.fit();
 
       terminal.writeln("Xoblas Terminal =) \n"); // Welcome message
@@ -40,11 +41,30 @@ export const useTerminal = (
   useEffect(() => onWsData(wsData, terminal), [wsData, terminal]);
 
   return {
-    onResize: ({ cols, rows }: { cols: number; rows: number }) => {
-      if (terminal) {
-        terminal.resize(cols, Math.floor(rows));
+    onResize: (
+      lastSizeRef: RefObject<{
+        cols: number;
+        rows: number;
+      }>,
+    ) => {
+      if (!terminal) return;
 
-        fitAddon.fit();
+      fitAddon.fit();
+
+      const dimensions = fitAddon.proposeDimensions();
+
+      if (!dimensions) return;
+
+      const { cols, rows } = dimensions;
+
+      const last = lastSizeRef.current;
+
+      const changed = cols !== last.cols || rows !== last.rows;
+
+      if (changed) {
+        lastSizeRef.current = { cols, rows };
+
+        terminal.resize(cols, rows);
 
         // After resize, redraw prompt and restore cursor position
         if (wsData) {
@@ -56,10 +76,10 @@ export const useTerminal = (
         } else {
           terminal.write("\r\x1b[K$ \u001B[s");
         }
-      }
 
-      if (socket.current?.readyState === WebSocket.OPEN) {
-        // socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
+        if (socket.current?.readyState === WebSocket.OPEN) {
+          socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
+        }
       }
     },
   };
