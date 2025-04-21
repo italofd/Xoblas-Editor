@@ -7,28 +7,38 @@ import { Socket, WsData } from "@/types/terminal";
 
 const fitAddon = new FitAddon();
 
+/**
+ * The approach i have follow is that the all the UI logic involving user input
+ * Would be treated here and not let the PTY terminal handles everything
+ * The prompt (user + host + cwd) and the user input (command) are all controlled trough JS
+ */
 export const useTerminal = (
   terminal: Terminal | null,
   ref: RefObject<HTMLDivElement>,
   socket: Socket,
   wsData: WsData,
 ) => {
+  //Current line is just user input
   const currentLineRef = useRef("");
+  //Prompt ref would be the the length of [host + user + cwd]
+  const promptLengthRef = useRef(2);
 
+  //Sets terminal config, initials input and eventListener for xterm
   useEffect(() => {
     if (terminal && socket && ref.current) {
       //Load addon and use it
       terminal.loadAddon(fitAddon);
+      fitAddon.fit();
+
+      //Terminal Config (cannot be set the way the API describes due to a NextJS bug with the library)
       terminal.options["convertEol"] = true;
       terminal.options["fontFamily"] = "monospace";
       terminal.options["cursorBlink"] = true;
 
-      fitAddon.fit();
-
       terminal.writeln("Xoblas Terminal =) \n"); // Welcome message
 
       // Handles keyboard events on the terminal
-      terminal.onKey(handleTerminalKeyEvent(terminal, socket, currentLineRef));
+      terminal.onKey(handleTerminalKeyEvent(terminal, socket, currentLineRef, promptLengthRef));
 
       // Initial prompt
       terminal.write("$ \u001B[s"); // Save cursor position after prompt
@@ -41,9 +51,10 @@ export const useTerminal = (
   }, [terminal, ref, socket]);
 
   //Handles new income of data coming trough websocket
-  useEffect(() => onWsData(wsData, terminal), [wsData, terminal]);
+  useEffect(() => onWsData(wsData, terminal, promptLengthRef), [wsData, terminal]);
 
   return {
+    //[TO-DO]: Fix resize that have broken after better commands control (backspace is broken and delete or/and insert)
     onResize: (
       lastSizeRef: RefObject<{
         cols: number;
@@ -72,7 +83,7 @@ export const useTerminal = (
         // After resize, redraw prompt and restore cursor position
         if (wsData) {
           terminal.write("\r\x1b[K"); // Clear current line
-          const prompt = createPrompt(cols, wsData);
+          const prompt = createPrompt(cols, wsData, promptLengthRef);
 
           // Write new prompt and save cursor position
           terminal.write(`${prompt}\u001B[s`);

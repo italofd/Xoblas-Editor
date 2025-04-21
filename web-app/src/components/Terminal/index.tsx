@@ -27,7 +27,7 @@ export const XTerminal = () => {
     return () => {
       resizeObserver.disconnect();
     };
-  }, [ref, charRef, instance, wsData]);
+  }, [ref, charRef, instance, wsData, lastSizeRef]);
 
   return (
     <div className="w-full h-full flex flex-col">
