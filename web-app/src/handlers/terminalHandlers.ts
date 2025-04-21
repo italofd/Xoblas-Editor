@@ -87,7 +87,7 @@ export const handleTerminalKeyEvent =
     const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
     const eventKey = domEvent.key;
 
-    // @ts-ignore: Internal API to get current cursor position
+    // @ts-expect-error: Internal API to get current cursor position
     const cursorX = terminal._core.buffer.x;
 
     const relativePos = cursorX - promptLengthRef.current;

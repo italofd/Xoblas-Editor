@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 
 import { useXTerm } from "react-xtermjs";
 
-export const XTerminal = () => {
+function XTerminal() {
   const { instance, ref } = useXTerm();
   const { socket, wsData } = useSocket();
   const charRef = useRef<HTMLDivElement>(null);
@@ -27,7 +27,7 @@ export const XTerminal = () => {
     return () => {
       resizeObserver.disconnect();
     };
-  }, [ref, charRef, instance, wsData, lastSizeRef]);
+  }, [ref, charRef, instance, wsData, lastSizeRef, onResize]);
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -42,4 +42,6 @@ export const XTerminal = () => {
       </div>
     </div>
   );
-};
+}
+
+export default XTerminal;

@@ -12,7 +12,12 @@ import Tabs from "../Tabs";
 import { PythonCodeDTO } from "@/types/components";
 
 import "../Terminal/terminal.css";
-import { XTerminal } from "../Terminal";
+
+import dynamic from "next/dynamic";
+
+const XTerminal = dynamic(() => import("../Terminal/index"), {
+  ssr: false,
+});
 
 export const CodeEditorMainSection = () => {
   const [isExecLoading, setIsExecLoading] = useState<boolean>(false);

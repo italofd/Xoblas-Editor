@@ -17,7 +17,7 @@ export const useSocket = () => {
     const webSocket = new WebSocket(getServerURL("ws") + "/ws/terminal");
 
     // Connection opened
-    webSocket.addEventListener("open", (event) => {
+    webSocket.addEventListener("open", () => {
       //[TO-DO]: Implement ACK
       // webSocket.send("Connection established");
     });
@@ -36,7 +36,7 @@ export const useSocket = () => {
     socket.current = webSocket;
 
     return () => {
-      webSocket.readyState === webSocket.OPEN && webSocket.close();
+      if (webSocket.readyState === webSocket.OPEN) webSocket.close();
     };
   }, []);
 
