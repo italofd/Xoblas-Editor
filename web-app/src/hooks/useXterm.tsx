@@ -48,10 +48,13 @@ export const useTerminal = (
         terminal.dispose();
       };
     }
-  }, [terminal, ref, socket]);
+  }, [terminal, ref, socket, promptLengthRef, currentLineRef]);
 
   //Handles new income of data coming trough websocket
-  useEffect(() => onWsData(wsData, terminal, promptLengthRef), [wsData, terminal]);
+  useEffect(
+    () => onWsData(wsData, terminal, promptLengthRef, currentLineRef),
+    [wsData, terminal, promptLengthRef, currentLineRef],
+  );
 
   return {
     //[TO-DO]: Fix resize that have broken after better commands control (backspace is broken and delete or/and insert)

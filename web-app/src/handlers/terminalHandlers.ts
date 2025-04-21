@@ -52,17 +52,26 @@ export const handleCommand = (command: string, terminal: Terminal | null, socket
   }
 };
 
-export const onWsData = (wsData: WsData, terminal: Terminal | null, promptLengthRef: PrompRef) => {
+export const onWsData = (
+  wsData: WsData,
+  terminal: Terminal | null,
+  promptLengthRef: PrompRef,
+  currentLineRef: RefObject<string>,
+) => {
   if (wsData && terminal) {
+    // Write command output
     terminal.writeln(wsData.output);
 
-    // Get terminal dimensions
+    // Get terminal width
     const dimensions = terminal.cols;
 
-    // Generate appropriate prompt based on current width
+    // Generate prompt and update promptLengthRef
     const prompt = createPrompt(dimensions, wsData, promptLengthRef);
 
-    // Write prompt and save cursor position
+    // Reset line buffer after command completes
+    currentLineRef.current = " ";
+
+    // Write new prompt and save cursor position
     terminal.write(`${prompt}\u001B[s`);
   }
 };
@@ -76,90 +85,82 @@ export const handleTerminalKeyEvent =
   ) =>
   ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
     const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
-
     const eventKey = domEvent.key;
 
-    // This api its not stable and types are not updated =)
-    // @ts-ignore
-    const cursorX = terminal._core.buffer.x; // current cursor column
+    // @ts-ignore: Internal API to get current cursor position
+    const cursorX = terminal._core.buffer.x;
 
-    // Handle Enter key (executing a command)
+    const relativePos = cursorX - promptLengthRef.current;
+
     if (eventKey === "Enter") {
       terminal.writeln("");
       handleCommand(currentLineRef.current, terminal, socket);
       currentLineRef.current = "";
-
       return;
     }
 
-    //Handle regular backspace
     if (eventKey === "Backspace") {
       if (cursorX > promptLengthRef.current) {
-        const relativePos = cursorX - promptLengthRef.current;
-
-        // Remove character at cursor - 1
         currentLineRef.current =
           currentLineRef.current.slice(0, relativePos - 1) +
           currentLineRef.current.slice(relativePos);
 
-        // Move cursor left
         terminal.write("\x1b[D");
 
-        // Overwrite from current cursor to end of line
         const remaining = currentLineRef.current.slice(relativePos - 1);
         terminal.write(remaining + " ");
-
-        // Move cursor back to correct position
-        const movesLeft = remaining.length + 1;
-        terminal.write(`\x1b[${movesLeft}D`);
+        terminal.write(`\x1b[${remaining.length + 1}D`);
       }
-
       return;
     }
 
     if (eventKey === "Delete") {
-      const relativePos = cursorX - promptLengthRef.current;
-
       if (relativePos < currentLineRef.current.length) {
-        // Remove character at cursor
         currentLineRef.current =
           currentLineRef.current.slice(0, relativePos) +
           currentLineRef.current.slice(relativePos + 1);
 
-        // Overwrite from current cursor to end of line
         const remaining = currentLineRef.current.slice(relativePos);
         terminal.write(remaining + " ");
-
-        // Move cursor back to correct position
-        const movesLeft = remaining.length + 1;
-        terminal.write(`\x1b[${movesLeft}D`);
+        terminal.write(`\x1b[${remaining.length + 1}D`);
       }
-
       return;
     }
 
     if (eventKey === "ArrowUp" || eventKey === "ArrowDown") {
-      //[TO-DO]: Implement History =)
+      // [TO-DO]: Implement History =)
       return;
     }
 
     if (eventKey === "ArrowLeft") {
       if (cursorX > promptLengthRef.current) {
-        terminal.write("\x1b[D"); // Move cursor left
+        terminal.write("\x1b[D");
       }
       return;
     }
 
     if (eventKey === "ArrowRight") {
       if (cursorX < promptLengthRef.current + currentLineRef.current.length) {
-        terminal.write("\x1b[C"); // Move cursor right
+        terminal.write("\x1b[C");
       }
       return;
     }
 
-    // Handle printable characters
+    //[TO-DO]: Breaking events that needs proper handling
+    if (eventKey === "End" || eventKey === "Home" || eventKey === "Insert") return;
+
     if (printable) {
-      currentLineRef.current += key;
-      terminal.write(key);
+      currentLineRef.current =
+        currentLineRef.current.slice(0, relativePos) +
+        key +
+        currentLineRef.current.slice(relativePos);
+
+      // Overwrite from cursor position to end of line
+      const tail = currentLineRef.current.slice(relativePos);
+      terminal.write(tail);
+
+      // Move cursor back to just after inserted char
+      const movesLeft = tail.length - 1;
+      if (movesLeft > 0) terminal.write(`\x1b[${movesLeft}D`);
     }
   };
