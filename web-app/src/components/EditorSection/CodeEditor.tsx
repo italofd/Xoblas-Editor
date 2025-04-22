@@ -1,20 +1,57 @@
-"use client";
 import { DEFAULT_PYTHON_CODE } from "@/constants/editor";
 import { CodeEditorRef } from "@/types/editor";
 import { Editor } from "@monaco-editor/react";
+import { useEffect } from "react";
+import * as monaco from "monaco-editor";
 
 /**
  * This is only client side since monaco-react is not adapted fully to server components
  */
 
-export const CodeEditor = ({ editorRef }: { editorRef: CodeEditorRef }) => {
+export const CodeEditor = ({
+  editorRef,
+  onSave,
+}: {
+  editorRef: CodeEditorRef;
+  onSave?: (content: string) => void;
+}) => {
+  // Prevent default browser save behavior
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  const handleEditorDidMount = (
+    editor: monaco.editor.IStandaloneCodeEditor,
+    monacoInstance: typeof monaco,
+  ) => {
+    editorRef.current = editor;
+
+    // Add custom key binding for Ctrl+S
+    editor.addCommand(monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyS, () => {
+      // Call the onSave callback with current editor content
+      if (onSave && editor) {
+        onSave(editor.getValue());
+      }
+    });
+  };
+
   return (
     <Editor
       height="100%"
       width="100%"
       defaultLanguage="python"
       defaultValue={DEFAULT_PYTHON_CODE}
-      onMount={(editor) => (editorRef.current = editor)}
+      onMount={handleEditorDidMount}
       theme="vs-dark"
       options={{
         minimap: { enabled: false },
