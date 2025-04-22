@@ -5,9 +5,10 @@ import { useEffect, useRef } from "react";
 
 import { useXTerm } from "react-xtermjs";
 
-function XTerminal() {
+function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> }) {
+  const { isEnvReady, socket, wsData } = socketHook;
+
   const { instance, ref } = useXTerm();
-  const { socket, wsData, isEnvReady } = useSocket();
   const charRef = useRef<HTMLDivElement>(null);
   const lastSizeRef = useRef({ cols: 0, rows: 0 });
 

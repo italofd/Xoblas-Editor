@@ -48,8 +48,10 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
                 result = await shell.execute(json_data.get("command"))
 
                 await websocket.send_json(result)
-            if req_type == "write_file":
-                result = await shell.write_to_file(json_data.get("file"))
+
+            elif req_type == "write_file":
+                await shell.write_to_file(code_content=json_data.get("content"))
+
             else:
                 _, cols, rows = json_data.values()
 

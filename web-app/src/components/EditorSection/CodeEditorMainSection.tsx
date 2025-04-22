@@ -14,6 +14,7 @@ import { PythonCodeDTO } from "@/types/components";
 import "../Terminal/terminal.css";
 
 import dynamic from "next/dynamic";
+import { useSocket } from "@/hooks/useSocket";
 
 const XTerminal = dynamic(() => import("../Terminal/index"), {
   ssr: false,
@@ -29,6 +30,7 @@ export const CodeEditorMainSection = () => {
   const notificationRef = useRef<HTMLDialogElement>(null);
 
   const tabs = useTabs();
+  const socketHook = useSocket();
 
   useEffect(() => {
     if (!notificationRef.current) return;
@@ -51,7 +53,12 @@ export const CodeEditorMainSection = () => {
           }}
         >
           <div className="flex h-full gap-8">
-            <CodeEditor editorRef={editorRef} />
+            <CodeEditor
+              onSave={(content) =>
+                socketHook.socket.current?.send(JSON.stringify({ type: "write_file", content }))
+              }
+              editorRef={editorRef}
+            />
           </div>
         </MainLayout>
         <div className="flex flex-col sm:h-full lg:max-w-[30%] lg:min-w-[30%] bg-zinc-800 border border-zinc-700 rounded-lg p-4 gap-4">
@@ -68,7 +75,7 @@ export const CodeEditorMainSection = () => {
           </Tabs>
         </div>
       </div>
-      <XTerminal />
+      <XTerminal socketHook={socketHook} />
 
       <Notification
         message="Your code and his output was stored into the database"

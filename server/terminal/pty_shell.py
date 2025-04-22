@@ -9,6 +9,7 @@ from typing import Dict
 import termios
 import struct
 import subprocess
+import base64
 
 
 # A class to handle PTY shell
@@ -124,32 +125,46 @@ class PtyShell:
 
             self.last_output = await self.read_until_prompt()
 
-    async def write_to_file(self, content: str) -> Dict[str, str]:
+    async def write_to_file(self, code_content: str) -> Dict[str, str]:
         """
-        Write content to a file in the Docker container in a single operation.
-        Uses heredoc to handle multi-line content properly.
-        """
-        # Escape any dollar signs in the content to prevent bash interpolation
-        escaped_content = content.replace("$", "\\$")
+        Update the main.py file in the container using docker exec.
 
+        Args:
+            container_id: Docker container ID
+            code_content: Python code to write to main.py
+
+        Returns:
+            Dict with operation status and output
+        """
         file_path = "/home/termuser/main.py"
 
-        # Command to write content to file using heredoc
-        command = f"""cat > {file_path} << 'EOF_MARKER' {escaped_content} EOF_MARKER"""
+        # Base64 encode the content to avoid any issues with special characters
+        encoded_content = base64.b64encode(code_content.encode()).decode()
 
-        # Execute the command and get the result
-        result = await self.execute(command)
+        # Use echo with base64 decode to write the file
+        bash_command = f"echo '{encoded_content}' | base64 -d > {file_path}"
 
-        # Verify the file was written successfully
-        verify_command = f"[ -f {file_path} ] && echo 'File written successfully' || echo 'Failed to write file'"
-        verify_result = await self.execute(verify_command)
-
-        result["status"] = (
-            "success"
-            if "File written successfully" in verify_result["output"]
-            else "failed"
+        # Execute docker exec command
+        process = await asyncio.create_subprocess_exec(
+            "docker",
+            "exec",
+            self.container_id,
+            "bash",
+            "-c",
+            bash_command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
-        return result
+
+        _, stderr = await process.communicate()
+
+        if process.returncode == 0:
+            return {"status": "success", "message": "File updated successfully"}
+        else:
+            return {
+                "status": "error",
+                "message": f"Failed to update file: {stderr.decode()}",
+            }
 
     def parse_prompt_info(self, output: str) -> Dict[str, str]:
         """Extract user and working directory from the prompt."""
@@ -160,7 +175,8 @@ class PtyShell:
                 user_host, cwd = prompt_content.split(":", 1)
                 user, host = user_host.split("@")
                 return {"user": user, "host": host, "cwd": cwd}
-            except ValueError:
+            except ValueError as e:
+                print(e)
                 return {}
         return {}
 
