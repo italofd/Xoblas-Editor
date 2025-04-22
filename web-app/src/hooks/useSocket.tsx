@@ -1,3 +1,4 @@
+import { TrackAnonymous } from "@/handlers/tracking";
 import { getServerURL } from "@/utils/getServerURL";
 import { useEffect, useRef, useState } from "react";
 
@@ -14,10 +15,15 @@ export const useSocket = () => {
   const [wsData, setWsData] = useState<WsMessage>(null);
   const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
 
+  const tracker = new TrackAnonymous();
+
   useEffect(() => {
     if (socket.current) return;
 
-    const webSocket = new WebSocket(getServerURL("ws") + "/ws/terminal");
+    const webSocket = new WebSocket(
+      //Encode it because it can contain breaking URL characters
+      getServerURL("ws") + `/ws/terminal/${encodeURIComponent(tracker.getUserID())}`,
+    );
 
     // Connection opened
     webSocket.addEventListener("open", () => {

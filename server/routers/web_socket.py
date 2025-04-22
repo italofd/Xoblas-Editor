@@ -3,6 +3,9 @@ from typing import Dict
 import uuid
 from terminal.pty_shell import PtyShell
 import json
+import base64
+from urllib.parse import unquote
+
 
 # Dictionary to store active terminal sessions
 active_terminals: Dict[str, PtyShell] = {}
@@ -14,10 +17,10 @@ router = APIRouter(
 )
 
 
-@router.websocket("/terminal")
-async def ws_terminal(websocket: WebSocket):
-    # Generate a unique session ID
-    session_id = str(uuid.uuid4())
+@router.websocket("/terminal/{user_id}")
+async def ws_terminal(websocket: WebSocket, user_id: str):
+    # Generate a unique session ID based on the user_id (Anonymous, coming from the front-end)
+    session_id = unquote(user_id)
 
     try:
         await websocket.accept()

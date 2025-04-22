@@ -284,7 +284,7 @@ class PtyShell:
                 )
                 await proc.communicate()
             except Exception:
-                pass  # Best effort cleanup
+                pass
 
         self.pid = None
         self.fd = None
