@@ -12,8 +12,11 @@ export type WsMessage = {
 export const useSocket = () => {
   const socket = useRef<WebSocket | null>(null);
   const [wsData, setWsData] = useState<WsMessage>(null);
+  const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
 
   useEffect(() => {
+    if (socket.current) return;
+
     const webSocket = new WebSocket(getServerURL("ws") + "/ws/terminal");
 
     // Connection opened
@@ -30,6 +33,7 @@ export const useSocket = () => {
         const parsedJson: WsMessage = JSON.parse(event.data);
 
         setWsData(parsedJson);
+        setIsEnvReady(true);
       }
     });
 
@@ -40,5 +44,5 @@ export const useSocket = () => {
     };
   }, []);
 
-  return { socket, wsData };
+  return { socket, wsData, isEnvReady };
 };

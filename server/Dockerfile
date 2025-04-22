@@ -1,7 +1,8 @@
-
 FROM python:3.11
 
 RUN apt-get update -y
+
+RUN apt-get update && apt-get install -y docker.io
 
 WORKDIR /code
 

@@ -5,9 +5,9 @@ import { Socket, WsData } from "@/types/terminal";
 import { Terminal } from "@xterm/xterm";
 import { RefObject } from "react";
 
-export type PrompRef = RefObject<number>;
+export type PromptRef = RefObject<number>;
 
-export const createPrompt = (cols: number, wsData: WsData, promptLengthRef: PrompRef) => {
+export const createPrompt = (cols: number, wsData: WsData, promptLengthRef: PromptRef) => {
   if (!wsData) return "$ ";
 
   // Full prompt content (without ANSI escape sequences)
@@ -21,7 +21,7 @@ export const createPrompt = (cols: number, wsData: WsData, promptLengthRef: Prom
   // Calculate total visible length
   const totalLength = user.length + host.length + cwd.length + baseChars;
 
-  promptLengthRef.current = totalLength;
+  promptLengthRef.current = totalLength + 1;
 
   // If prompt is too long for terminal width, create truncated version
   if (totalLength >= cols) {
@@ -55,7 +55,7 @@ export const handleCommand = (command: string, terminal: Terminal | null, socket
 export const onWsData = (
   wsData: WsData,
   terminal: Terminal | null,
-  promptLengthRef: PrompRef,
+  promptLengthRef: PromptRef,
   currentLineRef: RefObject<string>,
 ) => {
   if (wsData && terminal) {
@@ -81,7 +81,7 @@ export const handleTerminalKeyEvent =
     terminal: Terminal,
     socket: Socket,
     currentLineRef: RefObject<string>,
-    promptLengthRef: PrompRef,
+    promptLengthRef: PromptRef,
   ) =>
   ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
     const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
@@ -95,7 +95,7 @@ export const handleTerminalKeyEvent =
     if (eventKey === "Enter") {
       terminal.writeln("");
       handleCommand(currentLineRef.current, terminal, socket);
-      currentLineRef.current = "";
+      currentLineRef.current = " ";
       return;
     }
 

@@ -28,7 +28,9 @@ async def ws_terminal(websocket: WebSocket):
         active_terminals[session_id] = shell
 
         # Send initial prompt (perhaps, it could be executed in the initialization)
-        await shell.execute("")
+        initial_result = await shell.execute("")
+
+        await websocket.send_json(initial_result)
 
         while True:
             # Receive command from client
@@ -50,8 +52,9 @@ async def ws_terminal(websocket: WebSocket):
 
     except Exception as e:
         print(f"Terminal error: {e}")
+        await shell.close()
+
     finally:
         # Clean up the shell session
         if session_id in active_terminals:
-            await active_terminals[session_id].close()
-            del active_terminals[session_id]
+            await shell.close()

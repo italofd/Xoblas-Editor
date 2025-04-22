@@ -40,9 +40,6 @@ export const useTerminal = (
       // Handles keyboard events on the terminal
       terminal.onKey(handleTerminalKeyEvent(terminal, socket, currentLineRef, promptLengthRef));
 
-      // Initial prompt
-      terminal.write("$ \u001B[s"); // Save cursor position after prompt
-
       // Clean up on unmount
       return () => {
         terminal.dispose();
@@ -63,8 +60,9 @@ export const useTerminal = (
         cols: number;
         rows: number;
       }>,
+      isEnvReady: boolean,
     ) => {
-      if (!terminal) return;
+      if (!terminal || !isEnvReady) return;
 
       fitAddon.fit();
 

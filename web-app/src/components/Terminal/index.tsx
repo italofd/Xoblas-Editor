@@ -7,7 +7,7 @@ import { useXTerm } from "react-xtermjs";
 
 function XTerminal() {
   const { instance, ref } = useXTerm();
-  const { socket, wsData } = useSocket();
+  const { socket, wsData, isEnvReady } = useSocket();
   const charRef = useRef<HTMLDivElement>(null);
   const lastSizeRef = useRef({ cols: 0, rows: 0 });
 
@@ -18,7 +18,7 @@ function XTerminal() {
     if (!ref.current || !charRef.current) return;
 
     const resizeObserver = new ResizeObserver(() => {
-      onResize(lastSizeRef);
+      onResize(lastSizeRef, isEnvReady);
     });
 
     resizeObserver.observe(ref.current);
@@ -27,7 +27,7 @@ function XTerminal() {
     return () => {
       resizeObserver.disconnect();
     };
-  }, [ref, charRef, instance, wsData, lastSizeRef, onResize]);
+  }, [ref, charRef, instance, wsData, lastSizeRef, onResize, isEnvReady]);
 
   return (
     <div className="w-full h-full flex flex-col">
