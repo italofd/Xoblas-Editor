@@ -124,6 +124,33 @@ class PtyShell:
 
             self.last_output = await self.read_until_prompt()
 
+    async def write_to_file(self, content: str) -> Dict[str, str]:
+        """
+        Write content to a file in the Docker container in a single operation.
+        Uses heredoc to handle multi-line content properly.
+        """
+        # Escape any dollar signs in the content to prevent bash interpolation
+        escaped_content = content.replace("$", "\\$")
+
+        file_path = "/home/termuser/main.py"
+
+        # Command to write content to file using heredoc
+        command = f"""cat > {file_path} << 'EOF_MARKER' {escaped_content} EOF_MARKER"""
+
+        # Execute the command and get the result
+        result = await self.execute(command)
+
+        # Verify the file was written successfully
+        verify_command = f"[ -f {file_path} ] && echo 'File written successfully' || echo 'Failed to write file'"
+        verify_result = await self.execute(verify_command)
+
+        result["status"] = (
+            "success"
+            if "File written successfully" in verify_result["output"]
+            else "failed"
+        )
+        return result
+
     def parse_prompt_info(self, output: str) -> Dict[str, str]:
         """Extract user and working directory from the prompt."""
         match = re.search(r"__START__(.+?)__END__", output)

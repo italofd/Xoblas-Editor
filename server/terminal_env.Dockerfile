@@ -21,6 +21,9 @@ RUN echo "termuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 # Set the working directory
 WORKDIR /home/termuser
 
+# Create file that will hold code editor text (python code)
+RUN echo "" > main.py
+
 # Create a welcome message
 RUN echo 'echo "Welcome to your isolated terminal environment!"' >> /home/termuser/.bashrc
 
