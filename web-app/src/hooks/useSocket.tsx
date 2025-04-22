@@ -48,7 +48,7 @@ export const useSocket = () => {
     return () => {
       if (webSocket.readyState === webSocket.OPEN) webSocket.close();
     };
-  }, []);
+  }, [tracker]);
 
   return { socket, wsData, isEnvReady };
 };

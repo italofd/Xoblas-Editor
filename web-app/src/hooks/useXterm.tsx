@@ -10,7 +10,7 @@ const fitAddon = new FitAddon();
 /**
  * The approach i have follow is that the all the UI logic involving user input
  * Would be treated here and not let the PTY terminal handles everything
- * The prompt (user + host + cwd) and the user input (command) are all controlled trough JS (based on output coming from PTY)
+ * The prompt (user + host + cwd) and the user input (command) are all controlled trough JS
  */
 export const useTerminal = (
   terminal: Terminal | null,
