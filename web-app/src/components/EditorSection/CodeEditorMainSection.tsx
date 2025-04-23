@@ -61,6 +61,7 @@ export const CodeEditorMainSection = () => {
             />
           </div>
         </MainLayout>
+
         <div className="flex flex-col sm:h-full lg:max-w-[30%] lg:min-w-[30%] bg-zinc-800 border border-zinc-700 rounded-lg p-4 gap-4">
           <OutputLayout isLoading={isExecLoading}>
             <p className="text-green-400 ">{executionResponse}</p>
@@ -75,8 +76,8 @@ export const CodeEditorMainSection = () => {
           </Tabs>
         </div>
       </div>
-      <XTerminal socketHook={socketHook} />
 
+      <XTerminal socketHook={socketHook} />
       <Notification
         message="Your code and his output was stored into the database"
         dialogRef={notificationRef}
