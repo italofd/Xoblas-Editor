@@ -15,6 +15,7 @@ import "../Terminal/terminal.css";
 
 import dynamic from "next/dynamic";
 import { useSocket } from "@/hooks/useSocket";
+import LoadingOverlay from "../LoaderOverlay";
 
 const XTerminal = dynamic(() => import("../Terminal/index"), {
   ssr: false,
@@ -40,6 +41,7 @@ export const CodeEditorMainSection = () => {
 
   return (
     <>
+      <LoadingOverlay isLoading={!socketHook.isEnvReady} />
       <div className="flex flex-col lg:flex-row w-full h-full">
         <MainLayout
           monacoRef={editorRef}
