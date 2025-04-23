@@ -17,5 +17,4 @@ jobs:
           username: root
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
-            cd /app
             ./deploy.sh
