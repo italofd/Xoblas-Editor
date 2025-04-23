@@ -44,7 +44,7 @@ The NextJS app is hosted at _Vercel_
 
 #### server
 
-The FastAPI server is deployed in a Docker container at _Render_ alongside another separate project hosting the PostgreSQL database
+The FastAPI server is deployed in a Docker container inside a Droplet on _DigitalOcean_, this was necessary to use DinD (Docker inside Docker) pattern, alongside another separate project hosting the PostgreSQL database (on _Render_)
 
 ## Main Discussions
 
