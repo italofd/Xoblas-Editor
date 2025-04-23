@@ -35,7 +35,10 @@ export const MainLayout = ({
         <div className="flex flex-col h-full bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden">
           <div className="p-4 border-b border-zinc-700">
             <h2 className="text-lg font-semibold">Code Editor</h2>
-            <p className="text-sm text-zinc-400">Write your code here</p>
+            <p className="text-sm text-zinc-400">
+              Write your code here
+              <span className="text-sm text-zinc-300 font-bold"> save with Ctrl + S</span>
+            </p>
           </div>
           <div className="flex flex-[1] overflow-auto p-4">
             <div className="h-full  w-full p-4 rounded-md font-mono text-sm text-zinc-300 overflow-auto">

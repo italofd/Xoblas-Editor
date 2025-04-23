@@ -16,13 +16,15 @@ import base64
 class PtyShell:
     def __init__(
         self,
+        user_id: str,
         dockerfile_path: str = os.getcwd() + "/terminal_env.Dockerfile",
         container_name: str = "pty_shell_container",
     ):
         """Initialize a new PTY shell session with Docker container."""
         self.dockerfile_path = dockerfile_path
-        self.container_name = container_name
+        self.container_name = f"{container_name}_{user_id}"
         self.image_name = "pty-shell-image"
+        self.user_id = user_id
         self.process = None
         self.fd = None
         self.pid = None
@@ -80,6 +82,9 @@ class PtyShell:
         # Build the Docker image
         image_tag = await self._build_docker_image()
 
+        # Create volume to maintain pre created files and other from the user =)
+        await asyncio.create_subprocess_exec("docker", "volume", "create", self.user_id)
+
         # Start a Docker container and get its ID
         process = await asyncio.create_subprocess_exec(
             "docker",
@@ -87,6 +92,8 @@ class PtyShell:
             "-d",
             "-i",
             "--rm",
+            "-v",
+            f"{self.user_id}:/home/termuser",
             image_tag,
             "tail",
             "-f",
@@ -126,16 +133,6 @@ class PtyShell:
             self.last_output = await self.read_until_prompt()
 
     async def write_to_file(self, code_content: str) -> Dict[str, str]:
-        """
-        Update the main.py file in the container using docker exec.
-
-        Args:
-            container_id: Docker container ID
-            code_content: Python code to write to main.py
-
-        Returns:
-            Dict with operation status and output
-        """
         file_path = "/home/termuser/main.py"
 
         # Base64 encode the content to avoid any issues with special characters

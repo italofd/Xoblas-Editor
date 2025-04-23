@@ -1,10 +1,8 @@
 from fastapi import WebSocket, APIRouter
 from typing import Dict
-import uuid
 from terminal.pty_shell import PtyShell
 import json
-import base64
-from urllib.parse import unquote
+import re
 
 
 # Dictionary to store active terminal sessions
@@ -20,14 +18,21 @@ router = APIRouter(
 @router.websocket("/terminal/{user_id}")
 async def ws_terminal(websocket: WebSocket, user_id: str):
     # Generate a unique session ID based on the user_id (Anonymous, coming from the front-end)
-    session_id = unquote(user_id)
+    session_id = user_id
+
+    session_id = user_id.lower()
+
+    # Replace all disallowed characters with a dash or remove them
+    # This is to not break docker volume name pattern
+    sanitized = re.sub(r"[^a-z0-9_.-]", "-", user_id)
 
     try:
         await websocket.accept()
 
         # Create and start a new PTY shell session
-        shell = PtyShell()
+        shell = PtyShell(user_id=sanitized)
         await shell.start()
+
         active_terminals[session_id] = shell
 
         # Send initial prompt (perhaps, it could be executed in the initialization)
