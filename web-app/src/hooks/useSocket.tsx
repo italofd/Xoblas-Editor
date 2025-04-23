@@ -27,7 +27,6 @@ export const useSocket = () => {
 
     // Connection opened
     webSocket.addEventListener("open", () => {
-      console.log("EVA01: Server connection working");
       //[TO-DO]: Implement ACK
       // webSocket.send("Connection established");
     });

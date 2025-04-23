@@ -24,7 +24,6 @@ const XTerminal = dynamic(() => import("../Terminal/index"), {
 export const CodeEditorMainSection = () => {
   const [isExecLoading, setIsExecLoading] = useState<boolean>(false);
   const [executionResponse, setExecutionResponse] = useState<PythonCodeDTO>(null);
-
   const [shouldShowDialog, setShouldShowDialog] = useState(false);
 
   const editorRef = useRef<CodeEditorDTO>(null);
@@ -42,6 +41,7 @@ export const CodeEditorMainSection = () => {
   return (
     <>
       <LoadingOverlay isLoading={!socketHook.isEnvReady} />
+
       <div className="flex flex-col lg:flex-row w-full h-full">
         <MainLayout
           monacoRef={editorRef}

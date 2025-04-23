@@ -1,250 +1,79 @@
-import os
-import pty
-import select
-import fcntl
-import signal
-import re
-import asyncio
-from typing import Dict
-import termios
-import struct
-import subprocess
-import base64
+from typing import Dict, Optional
+from terminal.docker_manager import DockerManager
+from terminal.pty_controller import PtyController
+from terminal.file_manager import FileManager
+from terminal.terminal_config import TerminalConfig
 
 
-# A class to handle PTY shell
 class PtyShell:
     def __init__(
         self,
         user_id: str,
-        dockerfile_path: str = os.getcwd() + "/terminal_env.Dockerfile",
-        container_name: str = "pty_shell_container",
+        dockerfile_path: Optional[str] = None,
+        container_name: Optional[str] = None,
     ):
         """Initialize a new PTY shell session with Docker container."""
-        self.dockerfile_path = dockerfile_path
-        self.container_name = f"{container_name}_{user_id}"
-        self.image_name = "pty-shell-image"
         self.user_id = user_id
-        self.process = None
-        self.fd = None
-        self.pid = None
-        self.container_id = None
-        self.prompt = None
+
+        # Initialize configuration
+        self.config = TerminalConfig()
+        if dockerfile_path:
+            self.config.DEFAULT_DOCKERFILE_PATH = dockerfile_path
+        if container_name:
+            self.config.DEFAULT_CONTAINER_NAME = container_name
+
+        # Initialize components
+        self.docker = DockerManager(user_id, self.config)
+        self.pty = PtyController(self.config)
+        self.file_manager = None  # Will be initialized after container starts
+
         self.last_output = ""
-        self.rows = 24
-        self.cols = 80
-
-    async def _build_docker_image(self) -> str:
-        """Build Docker image from Dockerfile."""
-        # Create a temporary tag for our image
-        image_tag = f"{self.image_name}:latest"
-
-        is_built = await self._is_image_built()
-
-        if is_built:
-            return image_tag
-
-        # Build the Docker image
-        process = await asyncio.create_subprocess_exec(
-            "docker",
-            "build",
-            "-t",
-            image_tag,
-            "-f",
-            self.dockerfile_path,
-            ".",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
-        await process.communicate()
-
-        if process.returncode != 0:
-            raise Exception("Failed to build Docker image")
-
-        return image_tag
-
-    async def _is_image_built(self) -> bool:
-        process = await asyncio.create_subprocess_exec(
-            "docker", "images", self.image_name, stdout=asyncio.subprocess.PIPE
-        )
-
-        stdout, _ = await process.communicate()
-
-        output = stdout.decode()
-
-        if self.image_name in output:
-            return True
-        return False
 
     async def start(self) -> None:
         """Start the PTY shell session in a Docker container."""
         # Build the Docker image
-        image_tag = await self._build_docker_image()
+        await self.docker.build_image()
 
-        # Create volume to maintain pre created files and other from the user =)
-        await asyncio.create_subprocess_exec("docker", "volume", "create", self.user_id)
+        # Start the container
+        container_id = await self.docker.start_container()
 
-        # Start a Docker container and get its ID
-        process = await asyncio.create_subprocess_exec(
-            "docker",
-            "run",
-            "-d",
-            "-i",
-            "--rm",
-            "-v",
-            f"{self.user_id}:/home/termuser",
-            image_tag,
-            "tail",
-            "-f",
-            "/dev/null",
-            stdout=asyncio.subprocess.PIPE,
-        )
+        # Initialize the file manager now that we have a container
+        self.file_manager = FileManager(self.docker)
 
-        stdout, _ = await process.communicate()
-        self.container_id = stdout.decode().strip()
+        # Create and configure the PTY
+        await self.pty.create_pty(container_id)
+        await self.pty.configure_terminal()
 
-        if not self.container_id:
-            raise Exception("Failed to start Docker container")
-
-        # Now fork a PTY to connect to the docker exec process
-        self.pid, self.fd = pty.fork()
-
-        if self.pid == 0:  # Child process
-            # Execute docker exec to connect to the container
-            os.execvp("docker", ["docker", "exec", "-it", self.container_id, "bash"])
-        else:  # Parent process
-            # Make the PTY non-blocking
-            flags = fcntl.fcntl(self.fd, fcntl.F_GETFL)
-            fcntl.fcntl(self.fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
-
-            # Give the shell a moment to initialize
-            await asyncio.sleep(0.1)
-
-            # Configure the prompt
-            await self.write('export PS1="__START__\\u@\\h:\\w__END__$ "\n')
-            await self.write("export TERM=xterm-256color\n")
-
-            # Set initial terminal size
-            await self.resize(self.rows, self.cols)
-
-            self.prompt = "__END__$"
-
-            self.last_output = await self.read_until_prompt()
+        # Read initial output
+        self.last_output = await self.pty.read_until_prompt()
 
     async def write_to_file(self, code_content: str) -> Dict[str, str]:
-        file_path = "/home/termuser/main.py"
+        """Write content to a file in the container."""
+        return await self.file_manager.write_file(code_content)
 
-        # Base64 encode the content to avoid any issues with special characters
-        encoded_content = base64.b64encode(code_content.encode()).decode()
-
-        # Use echo with base64 decode to write the file
-        bash_command = f"echo '{encoded_content}' | base64 -d > {file_path}"
-
-        # Execute docker exec command
-        process = await asyncio.create_subprocess_exec(
-            "docker",
-            "exec",
-            self.container_id,
-            "bash",
-            "-c",
-            bash_command,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
-        _, stderr = await process.communicate()
-
-        if process.returncode == 0:
-            return {"status": "success", "message": "File updated successfully"}
-        else:
-            return {
-                "status": "error",
-                "message": f"Failed to update file: {stderr.decode()}",
-            }
-
-    def parse_prompt_info(self, output: str) -> Dict[str, str]:
-        """Extract user and working directory from the prompt."""
-        match = re.search(r"__START__(.+?)__END__", output)
-        if match:
-            prompt_content = match.group(1)  # e.g., "user@host:/home/user"
-            try:
-                user_host, cwd = prompt_content.split(":", 1)
-                user, host = user_host.split("@")
-                return {"user": user, "host": host, "cwd": cwd}
-            except ValueError as e:
-                print(e)
-                return {}
-        return {}
-
-    async def resize(self, rows: int, cols: int) -> None:
-        if self.fd is not None:
-            self.rows = rows
-            self.cols = cols
-
-            # Create the window size structure
-            winsize = struct.pack("HHHH", rows, cols, 0, 0)
-            fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
-
-            if self.pid is not None and self.is_alive():
-                try:
-                    os.kill(self.pid, signal.SIGWINCH)
-
-                    # Send the stty command
-                    await self.write(f"stty columns {cols} rows {rows}\n")
-
-                    # Important: Add a small delay
-                    await asyncio.sleep(0.1)
-
-                    # Clear the buffer by reading all pending output
-                    try:
-                        while True:
-                            r, _, _ = select.select([self.fd], [], [], 0.05)
-                            if not r:
-                                break
-                            os.read(self.fd, 4096)
-                    except (OSError, BlockingIOError):
-                        pass
-
-                except ProcessLookupError:
-                    pass
-
-    async def write(self, data: str) -> None:
-        """Write raw data to the PTY."""
-        os.write(self.fd, data.encode())
-
-    async def read_until_prompt(self, timeout: float = 2.0) -> str:
-        output = ""
-        end_time = asyncio.get_event_loop().time() + timeout
-
-        while asyncio.get_event_loop().time() < end_time:
-            r, _, _ = select.select([self.fd], [], [], 0.1)
-
-            if r:
-                chunk = os.read(self.fd, 4096).decode(errors="replace")
-                output += chunk
-
-                # Look for our custom prompt
-                if "__END__$" in chunk:
-                    break
-
-            await asyncio.sleep(0.05)
-
-        return output
+    async def read_from_file(self, file_path: str = "/home/termuser/main.py") -> str:
+        """Read content from a file in the container."""
+        return await self.file_manager.read_file(file_path)
 
     async def execute(self, command: str) -> Dict[str, str]:
-        await self.write(command + "\n")
-        output = await self.read_until_prompt()
+        """Execute a command in the shell."""
+        await self.pty.write(command + "\n")
+        output = await self.pty.read_until_prompt()
 
         # Extract and remove prompt and echoed command
         lines = output.splitlines()
 
-        # Detect prompt line
-        prompt_info = self.parse_prompt_info(output)
+        # Parse prompt info
+        prompt_info = self.pty.parse_prompt_info(output)
+
+        print(prompt_info)
 
         # Remove the prompt lines from output
         lines = [
-            line for line in lines if "__START__" not in line and "__END__" not in line
+            line
+            for line in lines
+            if self.config.PROMPT_PREFIX not in line
+            and self.config.PROMPT_SUFFIX not in line
         ]
 
         # Remove echoed command
@@ -260,72 +89,18 @@ class PtyShell:
             "host": prompt_info.get("host", ""),
         }
 
+    async def resize(self, rows: int, cols: int) -> None:
+        """Resize the terminal."""
+        await self.pty.resize(rows, cols)
+
     def is_alive(self) -> bool:
-        """Check if the shell process is still alive."""
-        if self.pid is None:
-            return False
-
-        try:
-            # Check if the docker container is running
-            if self.container_id:
-                result = subprocess.run(
-                    [
-                        "docker",
-                        "inspect",
-                        "-f",
-                        "{{.State.Running}}",
-                        self.container_id,
-                    ],
-                    capture_output=True,
-                    text=True,
-                )
-                if result.stdout.strip() != "true":
-                    return False
-
-            # Check if the PTY process is alive
-            os.kill(self.pid, 0)
-            return True
-        except ProcessLookupError:
-            return False
-        except PermissionError:
-            return True  # Process exists but we don't have permission
+        """Check if the shell is still alive."""
+        return self.pty.is_process_alive() and self.docker.is_container_running()
 
     async def close(self) -> None:
         """Close the PTY shell session and clean up Docker resources."""
         # Close the PTY
-        if self.pid and self.is_alive():
-            try:
-                os.kill(self.pid, signal.SIGTERM)
-            except ProcessLookupError:
-                pass  # Process already terminated
-
-        if self.fd:
-            os.close(self.fd)
+        self.pty.close()
 
         # Stop and remove the Docker container
-        if self.container_id:
-            try:
-                proc = await asyncio.create_subprocess_exec(
-                    "docker",
-                    "container",
-                    "stop",
-                    self.container_id,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                await proc.communicate()
-
-                proc = await asyncio.create_subprocess_exec(
-                    "docker",
-                    "rm",
-                    self.container_name,
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.PIPE,
-                )
-                await proc.communicate()
-            except Exception:
-                pass
-
-        self.pid = None
-        self.fd = None
-        self.container_id = None
+        await self.docker.stop_container()
