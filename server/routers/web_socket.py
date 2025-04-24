@@ -43,6 +43,7 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
         # Sync file stored on container with UI
         main_file = await shell.read_from_file()
 
+        # File path will be implemented if we have multiple of them =) (multi file editor)
         await websocket.send_json(
             {"type": "file", "content": main_file, "file_path": ""}
         )

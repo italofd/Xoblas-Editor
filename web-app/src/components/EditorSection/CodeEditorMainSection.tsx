@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { CodeEditor } from "@/components/EditorSection/CodeEditor";
 import { MainLayout } from "./MainLayout";
 import { CodeEditorDTO } from "@/types/editor";
-import { Notification } from "../Notification";
 
 import "../Terminal/terminal.css";
 
@@ -28,7 +27,7 @@ export const CodeEditorMainSection = () => {
   useEffect(() => {
     if (editorRef.current && socketHook.fileData)
       editorRef.current.setValue(socketHook.fileData.content);
-  }, [editorRef.current, socketHook.fileData]);
+  }, [editorRef, socketHook.fileData]);
 
   return (
     <>

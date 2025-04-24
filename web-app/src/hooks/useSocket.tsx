@@ -20,13 +20,20 @@ export interface WsFileMessage extends BaseMessage {
 }
 
 // Type guard for WsCommandMessage
-function isCommandMessage(message: any): message is WsCommandMessage {
-  return message && typeof message === "object" && message.type === "command";
+function isCommandMessage(message: unknown): message is WsCommandMessage {
+  return (
+    message !== null &&
+    typeof message === "object" &&
+    "type" in message &&
+    message.type === "command"
+  );
 }
 
 // Type guard for WsFileMessage
-function isFileMessage(message: any): message is WsFileMessage {
-  return message && typeof message === "object" && message.type === "file";
+function isFileMessage(message: unknown): message is WsFileMessage {
+  return (
+    message !== null && typeof message === "object" && "type" in message && message.type === "file"
+  );
 }
 
 export const useSocket = () => {
@@ -35,10 +42,10 @@ export const useSocket = () => {
   const [fileData, setFileData] = useState<WsFileMessage | null>(null);
   const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
 
-  const tracker = new TrackAnonymous();
-
   useEffect(() => {
     if (socket.current) return;
+
+    const tracker = new TrackAnonymous();
 
     const webSocket = new WebSocket(
       //Encode it because it can contain breaking URL characters
@@ -58,6 +65,8 @@ export const useSocket = () => {
       if (event.data) {
         const parsedJson = JSON.parse(event.data);
 
+        if (!parsedJson) return;
+
         if (isCommandMessage(parsedJson)) setWsData(parsedJson);
         if (isFileMessage(parsedJson)) setFileData(parsedJson);
       }
@@ -68,7 +77,7 @@ export const useSocket = () => {
     return () => {
       if (webSocket.readyState === webSocket.OPEN) webSocket.close();
     };
-  }, [tracker]);
+  }, []);
 
   // Detects when env is ready
   useEffect(() => {
