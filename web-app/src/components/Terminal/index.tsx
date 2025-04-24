@@ -36,7 +36,7 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
       <div
         ref={ref}
         className="flex-grow bg-black rounded-b overflow-hidden text-base relative"
-        style={{ minHeight: "100px", maxHeight: "230px" }}
+        style={{ minHeight: "130px", maxHeight: "250px" }}
       />
       <div ref={charRef} className="invisible absolute top-0 left-0 whitespace-pre">
         M

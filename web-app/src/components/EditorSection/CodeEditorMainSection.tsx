@@ -18,18 +18,17 @@ const XTerminal = dynamic(() => import("../Terminal/index"), {
 });
 
 export const CodeEditorMainSection = () => {
-  const [shouldShowDialog, setShouldShowDialog] = useState(false);
-
   const editorRef = useRef<CodeEditorDTO>(null);
-  const notificationRef = useRef<HTMLDialogElement>(null);
 
   const socketHook = useSocket();
 
+  //Whenever we have file data, overwrite the terminal
+  //This is used for already used and modified containers so UI don't get out of sync
+  //Eventually this can be used to change multiple files (multi file editor with file structure)
   useEffect(() => {
-    if (!notificationRef.current) return;
-
-    return shouldShowDialog ? notificationRef.current.show() : notificationRef.current.close();
-  }, [notificationRef, shouldShowDialog]);
+    if (editorRef.current && socketHook.fileData)
+      editorRef.current.setValue(socketHook.fileData.content);
+  }, [editorRef.current, socketHook.fileData]);
 
   return (
     <>
@@ -49,11 +48,6 @@ export const CodeEditorMainSection = () => {
       </div>
 
       <XTerminal socketHook={socketHook} />
-      <Notification
-        message="Your code and his output was stored into the database"
-        dialogRef={notificationRef}
-        setShouldShowDialog={setShouldShowDialog}
-      />
     </>
   );
 };

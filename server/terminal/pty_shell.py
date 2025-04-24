@@ -83,6 +83,7 @@ class PtyShell:
         cleaned_output = "\n".join(lines).strip()
 
         return {
+            "type": "command",
             "output": cleaned_output,
             "cwd": prompt_info.get("cwd", ""),
             "user": prompt_info.get("user", ""),

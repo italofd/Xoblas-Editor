@@ -40,6 +40,13 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
         await websocket.send_json(initial_result)
 
+        # Sync file stored on container with UI
+        main_file = await shell.read_from_file()
+
+        await websocket.send_json(
+            {"type": "file", "content": main_file, "file_path": ""}
+        )
+
         while True:
             # Receive command from client
             data = await websocket.receive_text()
