@@ -60,8 +60,6 @@ export const useSocket = () => {
 
         if (isCommandMessage(parsedJson)) setWsData(parsedJson);
         if (isFileMessage(parsedJson)) setFileData(parsedJson);
-
-        setIsEnvReady(true);
       }
     });
 
@@ -71,6 +69,11 @@ export const useSocket = () => {
       if (webSocket.readyState === webSocket.OPEN) webSocket.close();
     };
   }, [tracker]);
+
+  // Detects when env is ready
+  useEffect(() => {
+    if (fileData && wsData && !isEnvReady) setIsEnvReady(true);
+  }, [fileData, wsData, isEnvReady]);
 
   return { socket, wsData, isEnvReady, fileData };
 };

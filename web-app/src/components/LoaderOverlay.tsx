@@ -1,8 +1,10 @@
 const LoadingOverlay = ({ isLoading = true }) => {
-  if (!isLoading) return null;
-
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-zinc-900/60 z-50 flex items-center justify-center">
+    <div
+      className={`fixed inset-0 backdrop-blur-sm bg-zinc-900/60 z-50 flex items-center justify-center transition-opacity duration-300 ease-in-out ${
+        isLoading ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
+    >
       <div className="relative bg-zinc-800/80 backdrop-blur-md p-8 rounded-lg shadow-xl border border-zinc-600/50">
         <div className="flex flex-col items-center">
           {/* Animated gradient background */}
