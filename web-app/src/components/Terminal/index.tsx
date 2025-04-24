@@ -31,7 +31,7 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
   }, [ref, charRef, instance, wsData, lastSizeRef, onResize, isEnvReady]);
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full h-auto flex flex-col">
       <div className="bg-zinc-800 text-white p-2 rounded-t">Terminal</div>
       <div
         ref={ref}
