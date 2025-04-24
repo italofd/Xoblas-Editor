@@ -1,34 +1,6 @@
 import { ReactNode } from "react";
-import { CodeEditorFooter } from "./CodeEditorFooter";
-import { CodeEditorRef } from "@/types/editor";
-import { SetExecutionResponse, SetIsExecLoading, SetShouldShowDialog } from "@/types/components";
-import { AddOutputFiles, SetIsLoadingOutputs } from "@/types/tabs";
 
-export const MainLayout = ({
-  children,
-  isExecLoading,
-  monacoRef,
-  setters,
-}: {
-  children: ReactNode;
-  isExecLoading: boolean;
-  monacoRef: CodeEditorRef;
-  setters: {
-    setExecutionResponse: SetExecutionResponse;
-    setIsExecLoading: SetIsExecLoading;
-    setShouldShowDialog: SetShouldShowDialog;
-    setIsLoadingOutputs: SetIsLoadingOutputs;
-    addOutputFiles: AddOutputFiles;
-  };
-}) => {
-  const {
-    setExecutionResponse,
-    setIsExecLoading,
-    setShouldShowDialog,
-    addOutputFiles,
-    setIsLoadingOutputs,
-  } = setters;
-
+export const MainLayout = ({ children }: { children: ReactNode }) => {
   return (
     <div className="w-full h-full min-w-[40%] flex bg-zinc-900 text-zinc-100 p-4 md:p-8">
       <div className="w-full mx-auto space-y-8">
@@ -46,7 +18,7 @@ export const MainLayout = ({
             </div>
           </div>
 
-          <CodeEditorFooter
+          {/* <CodeEditorFooter
             monacoRef={monacoRef}
             isExecLoading={isExecLoading}
             setExecutionResponse={setExecutionResponse}
@@ -54,7 +26,7 @@ export const MainLayout = ({
             setShouldShowDialog={setShouldShowDialog}
             setIsLoadingOutputs={setIsLoadingOutputs}
             addOutputFiles={addOutputFiles}
-          />
+          /> */}
         </div>
       </div>
     </div>
