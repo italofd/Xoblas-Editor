@@ -128,6 +128,14 @@ class PtyController:
                 return {}
         return {}
 
+    def check_alternate_screen(self, data: bytes) -> str:
+        """Check if alternate screen mode is entered or exited."""
+        if b"\x1b[?1049h" in data:
+            return "entered"
+        elif b"\x1b[?1049l" in data:
+            return "exited"
+        return "none"
+
     def close(self) -> None:
         """Close the PTY."""
         if self.pid and self.is_process_alive():
