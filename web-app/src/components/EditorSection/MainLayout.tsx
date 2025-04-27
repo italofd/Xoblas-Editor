@@ -17,16 +17,6 @@ export const MainLayout = ({ children }: { children: ReactNode }) => {
               {children}
             </div>
           </div>
-
-          {/* <CodeEditorFooter
-            monacoRef={monacoRef}
-            isExecLoading={isExecLoading}
-            setExecutionResponse={setExecutionResponse}
-            setIsExecLoading={setIsExecLoading}
-            setShouldShowDialog={setShouldShowDialog}
-            setIsLoadingOutputs={setIsLoadingOutputs}
-            addOutputFiles={addOutputFiles}
-          /> */}
         </div>
       </div>
     </div>

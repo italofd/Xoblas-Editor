@@ -33,20 +33,17 @@ export const CodeEditorMainSection = () => {
     <>
       <LoadingOverlay isLoading={!socketHook.isEnvReady} />
 
-      <div className="flex flex-col lg:flex-row w-full h-full">
+      <div className="flex flex-col w-full h-full">
         <MainLayout>
-          <div className="flex h-full gap-8">
-            <CodeEditor
-              onSave={(content) =>
-                socketHook.socket.current?.send(JSON.stringify({ type: "write_file", content }))
-              }
-              editorRef={editorRef}
-            />
-          </div>
+          <CodeEditor
+            onSave={(content) =>
+              socketHook.socket.current?.send(JSON.stringify({ type: "write_file", content }))
+            }
+            editorRef={editorRef}
+          />
         </MainLayout>
+        <XTerminal socketHook={socketHook} />
       </div>
-
-      <XTerminal socketHook={socketHook} />
     </>
   );
 };
