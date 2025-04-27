@@ -4,6 +4,8 @@ from terminal.pty_controller import PtyController
 from terminal.file_manager import FileManager
 from terminal.terminal_config import TerminalConfig
 
+import re
+
 
 class PtyShell:
     def __init__(
@@ -56,31 +58,35 @@ class PtyShell:
         return await self.file_manager.read_file(file_path)
 
     async def execute(self, command: str) -> Dict[str, str]:
-        """Execute a command in the shell."""
+        """Execute a command in the shell"""
         await self.pty.write(command + "\n")
         output = await self.pty.read_until_prompt()
-
-        # Extract and remove prompt and echoed command
-        lines = output.splitlines()
 
         # Parse prompt info
         prompt_info = self.pty.parse_prompt_info(output)
 
-        print(prompt_info)
+        # Find the prompt inside the output (even if glued)
+        prompt_pattern = (
+            re.escape(self.config.PROMPT_PREFIX)
+            + r".+?"
+            + re.escape(self.config.PROMPT_SUFFIX)
+        )
+        match = re.search(prompt_pattern, output)
 
-        # Remove the prompt lines from output
-        lines = [
-            line
-            for line in lines
-            if self.config.PROMPT_PREFIX not in line
-            and self.config.PROMPT_SUFFIX not in line
-        ]
+        if match:
+            prompt_start = match.start()
+            output_before_prompt = output[:prompt_start]
+        else:
+            # Fallback, no prompt found
+            output_before_prompt = output
 
         # Remove echoed command
-        if lines and lines[0].strip() == command.strip():
-            lines = lines[1:]
+        if output_before_prompt.strip().startswith(command.strip()):
+            output_before_prompt = output_before_prompt.strip()[
+                len(command.strip()) :
+            ].lstrip()
 
-        cleaned_output = "\n".join(lines).strip()
+        cleaned_output = output_before_prompt.strip()
 
         return {
             "type": "command",
