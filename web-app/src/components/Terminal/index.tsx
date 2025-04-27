@@ -1,9 +1,13 @@
 "use client";
 import { useSocket } from "@/hooks/useSocket";
 import { useTerminal } from "@/hooks/useXterm";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useXTerm } from "react-xtermjs";
+
+import { Resizable, ResizableProps } from "react-resizable";
+
+import "react-resizable/css/styles.css";
 
 function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> }) {
   const { isEnvReady, socket, wsData } = socketHook;
@@ -13,6 +17,8 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
   const lastSizeRef = useRef({ cols: 0, rows: 0 });
 
   const { onResize } = useTerminal(instance, ref, socket, wsData);
+
+  const [dimensions, setDimensions] = useState({ height: 280, width: 100 });
 
   //Resize Observer
   useEffect(() => {
@@ -30,18 +36,36 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
     };
   }, [ref, charRef, instance, wsData, lastSizeRef, onResize, isEnvReady]);
 
+  const customOnresize: ResizableProps["onResize"] = (_, { size }) => {
+    setDimensions({ width: size.width, height: size.height });
+  };
+
   return (
-    <div className="w-full h-auto flex flex-col">
-      <div className="bg-zinc-800 text-white p-2 rounded-t">Terminal</div>
+    <Resizable
+      height={dimensions.height}
+      width={dimensions.width}
+      onResize={customOnresize}
+      axis="y"
+      resizeHandles={["n"]}
+      minConstraints={[0, 280]}
+      handle={<span className="absolute top-0 left-0 w-full h-2 cursor-n-resize z-10" />}
+    >
       <div
-        ref={ref}
-        className="flex-grow bg-black rounded-b overflow-hidden text-base relative"
-        style={{ minHeight: "130px", maxHeight: "250px" }}
-      />
-      <div ref={charRef} className="invisible absolute top-0 left-0 whitespace-pre">
-        M
+        style={{
+          height: dimensions.height,
+        }}
+        className="pb-12"
+      >
+        <div className="bg-zinc-800 text-white p-2 rounded-t">Terminal</div>
+        <div
+          ref={ref}
+          className="flex flex-grow h-full min-h-0 bg-black rounded-b overflow-hidden text-base relative"
+        />
+        <div ref={charRef} className="invisible absolute top-0 left-0 whitespace-pre">
+          M
+        </div>
       </div>
-    </div>
+    </Resizable>
   );
 }
 

@@ -30,10 +30,10 @@ export const CodeEditorMainSection = () => {
   }, [editorRef, socketHook.fileData]);
 
   return (
-    <>
+    <div className="flex flex-col w-full h-full max-h-full overflow-hidden">
       <LoadingOverlay isLoading={!socketHook.isEnvReady} />
 
-      <div className="flex flex-col w-full h-full">
+      <div className="flex flex-col flex-grow min-h-0">
         <MainLayout>
           <CodeEditor
             onSave={(content) =>
@@ -42,8 +42,9 @@ export const CodeEditorMainSection = () => {
             editorRef={editorRef}
           />
         </MainLayout>
-        <XTerminal socketHook={socketHook} />
       </div>
-    </>
+
+      <XTerminal socketHook={socketHook} />
+    </div>
   );
 };
