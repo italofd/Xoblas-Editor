@@ -57,10 +57,14 @@ export const onWsData = (
   terminal: Terminal | null,
   promptLengthRef: PromptRef,
   currentLineRef: RefObject<string>,
+  isRawMode: boolean,
 ) => {
   if (wsData && terminal) {
     // Write command output
     terminal.writeln(wsData.output);
+
+    //If we are in raw mode we don`t want to writing the prompt
+    if (isRawMode) return;
 
     // Get terminal width
     const dimensions = terminal.cols;
@@ -82,8 +86,23 @@ export const handleTerminalKeyEvent =
     socket: Socket,
     currentLineRef: RefObject<string>,
     promptLengthRef: PromptRef,
+    isRawMode: boolean,
   ) =>
   ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
+    if (isRawMode) {
+      if (socket.current && socket.current.readyState === WebSocket.OPEN) {
+        // Send the raw key data to the PTY
+        socket.current.send(
+          JSON.stringify({
+            type: "input",
+            data: key,
+            specialKey: domEvent.key, // This allows the backend to know about special keys
+          }),
+        );
+      }
+      return;
+    }
+
     const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
     const eventKey = domEvent.key;
 

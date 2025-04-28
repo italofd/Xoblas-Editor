@@ -5,8 +5,6 @@ import { FitAddon } from "@xterm/addon-fit";
 import { createPrompt, handleTerminalKeyEvent, onWsData } from "@/handlers/terminalHandlers";
 import { Socket, WsData } from "@/types/terminal";
 
-const fitAddon = new FitAddon();
-
 /**
  * The approach i have follow is that the all the UI logic involving user input
  * Would be treated here and not let the PTY terminal handles everything
@@ -17,17 +15,20 @@ export const useTerminal = (
   ref: RefObject<HTMLDivElement>,
   socket: Socket,
   wsData: WsData,
+  isRawMode: boolean,
 ) => {
   //Current line is just user input
   const currentLineRef = useRef("");
   //Prompt ref would be the the length of [host + user + cwd]
   const promptLengthRef = useRef(2);
+  const fitAddon = new FitAddon();
 
   //Sets terminal config, initials input and eventListener for xterm
   useEffect(() => {
     if (terminal && socket && ref.current) {
       //Load addon and use it
       terminal.loadAddon(fitAddon);
+
       fitAddon.fit();
 
       //Terminal Config (cannot be set the way the API describes due to a NextJS bug with the library)
@@ -35,22 +36,24 @@ export const useTerminal = (
       terminal.options["fontFamily"] = "monospace";
       terminal.options["cursorBlink"] = true;
 
-      terminal.writeln("Xoblas Terminal =)"); // Welcome message
+      // terminal.writeln("Xoblas Terminal =)"); // Welcome message
 
       // Handles keyboard events on the terminal
-      terminal.onKey(handleTerminalKeyEvent(terminal, socket, currentLineRef, promptLengthRef));
+      const keyDisposable = terminal.onKey(
+        handleTerminalKeyEvent(terminal, socket, currentLineRef, promptLengthRef, isRawMode),
+      );
 
-      // Clean up on unmount
+      // Clean up handlers on unmount
       return () => {
-        terminal.dispose();
+        keyDisposable.dispose();
       };
     }
-  }, [terminal, ref, socket, promptLengthRef, currentLineRef]);
+  }, [terminal, ref, socket, promptLengthRef, currentLineRef, isRawMode]);
 
   //Handles new income of data coming trough websocket
   useEffect(
-    () => onWsData(wsData, terminal, promptLengthRef, currentLineRef),
-    [wsData, terminal, promptLengthRef, currentLineRef],
+    () => onWsData(wsData, terminal, promptLengthRef, currentLineRef, isRawMode),
+    [wsData, terminal, promptLengthRef, currentLineRef, isRawMode],
   );
 
   return {
@@ -66,36 +69,36 @@ export const useTerminal = (
 
       fitAddon.fit();
 
-      const dimensions = fitAddon.proposeDimensions();
+      // const dimensions = fitAddon.proposeDimensions();
 
-      if (!dimensions) return;
+      // if (!dimensions) return;
 
-      const { cols, rows } = dimensions;
+      // const { cols, rows } = dimensions;
 
-      const last = lastSizeRef.current;
+      // const last = lastSizeRef.current;
 
-      const changed = cols !== last.cols || rows !== last.rows;
+      // const changed = cols !== last.cols || rows !== last.rows;
 
-      if (changed) {
-        lastSizeRef.current = { cols, rows };
+      // if (changed) {
+      //   lastSizeRef.current = { cols, rows };
 
-        terminal.resize(cols, rows);
+      //   terminal.resize(cols, rows);
 
-        // After resize, redraw prompt and restore cursor position
-        if (wsData) {
-          terminal.write("\r\x1b[K"); // Clear current line
-          const prompt = createPrompt(cols, wsData, promptLengthRef);
+      //   // After resize, redraw prompt and restore cursor position
+      //   if (wsData) {
+      //     terminal.write("\r\x1b[K"); // Clear current line
+      //     const prompt = createPrompt(cols, wsData, promptLengthRef);
 
-          // Write new prompt and save cursor position
-          terminal.write(`${prompt}\u001B[s`);
-        } else {
-          terminal.write("\r\x1b[K$ \u001B[s");
-        }
+      //     // Write new prompt and save cursor position
+      //     terminal.write(`${prompt}\u001B[s`);
+      //   } else {
+      //     terminal.write("\r\x1b[K$ \u001B[s");
+      //   }
 
-        if (socket.current?.readyState === WebSocket.OPEN) {
-          socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
-        }
-      }
+      //   if (socket.current?.readyState === WebSocket.OPEN) {
+      //     socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
+      //   }
+      // }
     },
   };
 };

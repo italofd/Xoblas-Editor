@@ -62,8 +62,15 @@ class PtyShell:
 
     async def execute(self, command: str) -> Dict[str, str]:
         """Execute a command in the shell"""
-        await self.pty.write(command + "\n")
-        output = await self.pty.read_until_prompt()
+
+        await self.pty.write(
+            command if self.pty.in_alternate_screen else command + "\n"
+        )
+
+        if self.pty.in_alternate_screen:
+            output = await self.pty.read_immediate_output()
+        else:
+            output = await self.pty.read_until_prompt()
 
         # Parse prompt info
         prompt_info = self.pty.parse_prompt_info(output)
@@ -95,7 +102,7 @@ class PtyShell:
 
         return {
             "type": "command",
-            "output": cleaned_output,
+            "output": output if self.pty.in_alternate_screen else cleaned_output,
             "cwd": prompt_info.get("cwd", ""),
             "user": prompt_info.get("user", ""),
             "host": prompt_info.get("host", ""),
@@ -105,6 +112,16 @@ class PtyShell:
     async def resize(self, rows: int, cols: int) -> None:
         """Resize the terminal."""
         await self.pty.resize(rows, cols)
+
+    # Helper function to debug raw mode
+    def log_terminal_input(self, input_str: str):
+        escaped = ""
+        for char in input_str:
+            if ord(char) < 32 or ord(char) == 127:
+                escaped += f"\\x{ord(char):02x}"
+            else:
+                escaped += char
+        print(f"Terminal input: {escaped}")
 
     def is_alive(self) -> bool:
         """Check if the shell is still alive."""

@@ -56,6 +56,8 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
             req_type = json_data.get("type")
 
+            print(f"Incoming reqType:{req_type}")
+
             # To execute a terminal command
             if req_type == "command":
                 # Write command to shell
@@ -69,6 +71,7 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
             # Indicating raw mode "alternate screen" for text editors
             elif req_type == "input":
+                shell.log_terminal_input(json_data.get("data"))
                 result = await shell.execute(json_data.get("data"))
 
                 await websocket.send_json(result)

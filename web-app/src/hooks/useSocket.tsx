@@ -1,45 +1,13 @@
 import { TrackAnonymous } from "@/handlers/tracking";
+import { isCommandMessage, isFileMessage, WsCommandMessage, WsFileMessage } from "@/types/socket";
 import { getServerURL } from "@/utils/getServerURL";
 import { useEffect, useRef, useState } from "react";
-
-export type BaseMessage = {
-  type: "command" | "file";
-};
-
-//[TO-DO]: Export this somewhere else
-export interface WsCommandMessage extends BaseMessage {
-  host: string;
-  user: string;
-  cwd: string;
-  output: string;
-}
-
-export interface WsFileMessage extends BaseMessage {
-  file_path: string;
-  content: string;
-}
-
-// Type guard for WsCommandMessage
-function isCommandMessage(message: unknown): message is WsCommandMessage {
-  return (
-    message !== null &&
-    typeof message === "object" &&
-    "type" in message &&
-    message.type === "command"
-  );
-}
-
-// Type guard for WsFileMessage
-function isFileMessage(message: unknown): message is WsFileMessage {
-  return (
-    message !== null && typeof message === "object" && "type" in message && message.type === "file"
-  );
-}
 
 export const useSocket = () => {
   const socket = useRef<WebSocket | null>(null);
   const [wsData, setWsData] = useState<WsCommandMessage | null>(null);
   const [fileData, setFileData] = useState<WsFileMessage | null>(null);
+  const [isRawMode, setIsRawMode] = useState(false);
   const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
 
   useEffect(() => {
@@ -67,7 +35,10 @@ export const useSocket = () => {
 
         if (!parsedJson) return;
 
-        if (isCommandMessage(parsedJson)) setWsData(parsedJson);
+        if (isCommandMessage(parsedJson)) {
+          setIsRawMode(parsedJson.raw_mode);
+          setWsData(parsedJson);
+        }
         if (isFileMessage(parsedJson)) setFileData(parsedJson);
       }
     });
@@ -84,5 +55,5 @@ export const useSocket = () => {
     if (fileData && wsData && !isEnvReady) setIsEnvReady(true);
   }, [fileData, wsData, isEnvReady]);
 
-  return { socket, wsData, isEnvReady, fileData };
+  return { socket, wsData, isEnvReady, fileData, isRawMode };
 };
