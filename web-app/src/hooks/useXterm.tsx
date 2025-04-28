@@ -1,6 +1,6 @@
 "use client";
 import { Terminal } from "@xterm/xterm";
-import { RefObject, useEffect, useRef } from "react";
+import { RefObject, useEffect, useMemo, useRef } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { handleTerminalKeyEvent, onWsData } from "@/handlers/terminalHandlers";
 import { Socket, WsData } from "@/types/terminal";
@@ -21,7 +21,7 @@ export const useTerminal = (
   const currentLineRef = useRef("");
   //Prompt ref would be the the length of [host + user + cwd]
   const promptLengthRef = useRef(2);
-  const fitAddon = new FitAddon();
+  const fitAddon = useMemo(() => new FitAddon(), []);
 
   //Sets terminal config, initials input and eventListener for xterm
   useEffect(() => {

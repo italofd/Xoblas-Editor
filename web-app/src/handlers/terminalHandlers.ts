@@ -61,10 +61,14 @@ export const onWsData = (
 ) => {
   if (wsData && terminal) {
     // Write command output
-    isRawMode ? terminal.write(wsData.output) : terminal.writeln(wsData.output);
+    if (isRawMode) {
+      terminal.write(wsData.output);
 
-    //If we are in raw mode we don`t want to writing the prompt
-    if (isRawMode) return;
+      //If we are in raw mode we don`t want to writing the prompt
+      return;
+    } else {
+      terminal.writeln(wsData.output);
+    }
 
     // Get terminal width
     const dimensions = terminal.cols;
