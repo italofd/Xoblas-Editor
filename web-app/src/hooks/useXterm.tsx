@@ -57,7 +57,7 @@ export const useTerminal = (
   return {
     //[TO-DO]: Fix resize that have broken after better commands control (backspace is broken and delete or/and insert)
     onResize: (
-      _: RefObject<{
+      lastSizeRef: RefObject<{
         cols: number;
         rows: number;
       }>,
@@ -67,36 +67,25 @@ export const useTerminal = (
 
       fitAddon.fit();
 
-      // const dimensions = fitAddon.proposeDimensions();
+      const dimensions = fitAddon.proposeDimensions();
 
-      // if (!dimensions) return;
+      if (!dimensions) return;
 
-      // const { cols, rows } = dimensions;
+      const { cols, rows } = dimensions;
 
-      // const last = lastSizeRef.current;
+      const last = lastSizeRef.current;
 
-      // const changed = cols !== last.cols || rows !== last.rows;
+      const changed = cols !== last.cols || rows !== last.rows;
 
-      // if (changed) {
-      //   lastSizeRef.current = { cols, rows };
+      if (changed) {
+        lastSizeRef.current = { cols, rows };
 
-      //   terminal.resize(cols, rows);
+        terminal.resize(cols, rows);
 
-      //   // After resize, redraw prompt and restore cursor position
-      //   if (wsData) {
-      //     terminal.write("\r\x1b[K"); // Clear current line
-      //     const prompt = createPrompt(cols, wsData, promptLengthRef);
-
-      //     // Write new prompt and save cursor position
-      //     terminal.write(`${prompt}\u001B[s`);
-      //   } else {
-      //     terminal.write("\r\x1b[K$ \u001B[s");
-      //   }
-
-      //   if (socket.current?.readyState === WebSocket.OPEN) {
-      //     socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
-      //   }
-      // }
+        if (socket.current?.readyState === WebSocket.OPEN) {
+          socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
+        }
+      }
     },
   };
 };
