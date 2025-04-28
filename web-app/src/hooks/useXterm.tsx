@@ -59,7 +59,7 @@ export const useTerminal = (
   return {
     //[TO-DO]: Fix resize that have broken after better commands control (backspace is broken and delete or/and insert)
     onResize: (
-      lastSizeRef: RefObject<{
+      _: RefObject<{
         cols: number;
         rows: number;
       }>,

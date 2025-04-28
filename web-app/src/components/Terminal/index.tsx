@@ -39,8 +39,6 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
     setDimensions({ width: size.width, height: size.height });
   };
 
-  console.log("EVA01", dimensions.height);
-
   return (
     <Resizable
       height={dimensions.height}
