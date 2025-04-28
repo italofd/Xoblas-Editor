@@ -27,6 +27,7 @@
 - **NextJS**: We are exclusively using NextJS for the deployment experience they offer, it's much easier, with that said, we are not gonna use it to its full potential since the UI requirements of this project are not elaborated enough to create a boilerplate or unnecessary improvements.
 - **Monaco-React**: The most reliable and robust option for the Code Editor component, includes support for LSP and many languages, and is highly customizable if you want to keep adding new stuff. Also works out of the box with React, and the package maintainers for both of them are from Microsoft itself and are not third-party libraries.
 - **Axios**: The common fetching API from the JS std library is not good, I prefer a solution that has already better error management out of the box instead of having to create boilerplate. Axios have a humongous community and is usually the way to go for this kinda task.
+- **XTermJS**: The most robust option for a terminal, already deals with encoding and decoding with ease, have a somewhat good documentation as well, if we could work the back-end in NodeJS PTY, almost all the things would have work out of the box since they are coded with each other in plan (same creator)
 
 #### Server
 
