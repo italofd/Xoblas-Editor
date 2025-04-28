@@ -12,11 +12,13 @@
 
 #### server
 
+- **Requirements**: Docker Daemon must be up and running!
+    - This may not be compatible if you run on a Windows host. If you encounter any issues, please run it inside a Docker container, as it is provided already as the main Dockerfile
 - Open another terminal and execute the following `cd server`
 - Run your virtualenv or other similar tool
 - We recommend for this simple project going with **pip**
-  - Run `pip install -r requirements.tx`
-- Execute the following to start your local server `fastapi dev main.py`, and your server should be started and ready to use
+    - Run `pip install -r requirements.tx`
+- Execute the following to start your local server `fastapi dev main.py` and your server should be started and ready to use
 
 ## Technology Choice / Why
 
@@ -25,6 +27,7 @@
 - **NextJS**: We are exclusively using NextJS for the deployment experience they offer, it's much easier, with that said, we are not gonna use it to its full potential since the UI requirements of this project are not elaborated enough to create a boilerplate or unnecessary improvements.
 - **Monaco-React**: The most reliable and robust option for the Code Editor component, includes support for LSP and many languages, and is highly customizable if you want to keep adding new stuff. Also works out of the box with React, and the package maintainers for both of them are from Microsoft itself and are not third-party libraries.
 - **Axios**: The common fetching API from the JS std library is not good, I prefer a solution that has already better error management out of the box instead of having to create boilerplate. Axios have a humongous community and is usually the way to go for this kinda task.
+- **XTermJS**: The most robust option for a terminal, already deals with encoding and decoding with ease, have a somewhat good documentation as well, if we could work the back-end in NodeJS PTY, almost all the things would have work out of the box since they are coded with each other in plan (same creator)
 
 #### Server
 
