@@ -2,7 +2,7 @@
 import { Terminal } from "@xterm/xterm";
 import { RefObject, useEffect, useRef } from "react";
 import { FitAddon } from "@xterm/addon-fit";
-import { createPrompt, handleTerminalKeyEvent, onWsData } from "@/handlers/terminalHandlers";
+import { handleTerminalKeyEvent, onWsData } from "@/handlers/terminalHandlers";
 import { Socket, WsData } from "@/types/terminal";
 
 /**
@@ -48,7 +48,7 @@ export const useTerminal = (
         keyDisposable.dispose();
       };
     }
-  }, [terminal, ref, socket, promptLengthRef, currentLineRef, isRawMode]);
+  }, [terminal, ref, socket, promptLengthRef, currentLineRef, isRawMode, fitAddon]);
 
   //Handles new income of data coming trough websocket
   useEffect(
