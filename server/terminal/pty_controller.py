@@ -62,8 +62,6 @@ class PtyController:
 
         await self.resize(self.rows, self.cols)
 
-        await self.debug_terminal_settings()
-
     async def write(self, data: str) -> None:
         """Write raw data to the PTY."""
         if self.fd is not None:
@@ -89,13 +87,13 @@ class PtyController:
         return output
 
     # This value must be tested to determine a good approach when deploying as well =')
-    async def read_immediate_output(self, timeout: float = 0.06) -> str:
+    async def read_immediate_output(self, timeout: float = 0.03) -> str:
         """Quickly read available output from PTY."""
         output = ""
         end_time = asyncio.get_event_loop().time() + timeout
 
         while asyncio.get_event_loop().time() < end_time:
-            r, _, _ = select.select([self.fd], [], [], 0.05)
+            r, _, _ = select.select([self.fd], [], [], 0.04)
             if r:
                 chunk = os.read(self.fd, 4096).decode(errors="replace")
                 output += chunk
@@ -195,7 +193,7 @@ class PtyController:
                 return {}
         return {}
 
-    def check_alternate_screen(self, data: str) -> str:
+    def check_alternate_screen(self, data: str) -> bool:
         """Check if alternate screen mode is entered or exited."""
         if "\x1b[?1049h" in data:
             self.in_alternate_screen = True
@@ -205,6 +203,11 @@ class PtyController:
 
             return False
         return self.in_alternate_screen
+
+    def is_exiting_alternate_screen(self, data: str) -> bool:
+        if "\x1b[?1049l" in data:
+            return True
+        return False
 
     def close(self) -> None:
         """Close the PTY."""

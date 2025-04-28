@@ -69,6 +69,9 @@ class PtyShell:
 
         if self.pty.in_alternate_screen:
             output = await self.pty.read_immediate_output()
+
+            # We can return here and skip a ot of unnecessary calc we are doing
+            # In that way making the raw input take longer to process without a real need
         else:
             output = await self.pty.read_until_prompt()
 
@@ -98,15 +101,25 @@ class PtyShell:
 
         cleaned_output = output_before_prompt.strip()
 
+        cwd = prompt_info.get("cwd", "")
+
+        self.config.CURRENT_WORKDIR = cwd
+
+        # Grab the value before check alternate screen
+        previously_in_raw = self.pty.in_alternate_screen
+
         is_raw_mode = self.pty.check_alternate_screen(cleaned_output)
+
+        is_exiting_raw = previously_in_raw and not is_raw_mode
 
         return {
             "type": "command",
             "output": output if self.pty.in_alternate_screen else cleaned_output,
-            "cwd": prompt_info.get("cwd", ""),
+            "cwd": cwd,
             "user": prompt_info.get("user", ""),
             "host": prompt_info.get("host", ""),
             "raw_mode": is_raw_mode,
+            "is_exiting_raw": is_exiting_raw,
         }
 
     async def resize(self, rows: int, cols: int) -> None:

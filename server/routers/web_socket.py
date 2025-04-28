@@ -73,6 +73,17 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
             elif req_type == "input":
                 result = await shell.execute(json_data.get("data"))
 
+                # [TO-DO]: Make this object trough a function instead of repeating code
+                if result.get("is_exiting_raw"):
+                    file = await shell.read_from_file()
+                    await websocket.send_json(
+                        {
+                            "type": "file",
+                            "content": file,
+                            "file_path": "",
+                        }
+                    )
+
                 await websocket.send_json(result)
 
             elif req_type == "resize":
