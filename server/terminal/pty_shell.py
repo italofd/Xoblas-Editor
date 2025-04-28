@@ -39,6 +39,9 @@ class PtyShell:
         # Start the container
         container_id = await self.docker.start_container()
 
+        # Clean vim file listeners (lockers)
+        await self.docker.cleanup_vim_locks()
+
         # Initialize the file manager now that we have a container
         self.file_manager = FileManager(self.docker)
 
@@ -88,12 +91,15 @@ class PtyShell:
 
         cleaned_output = output_before_prompt.strip()
 
+        is_raw_mode = self.pty.check_alternate_screen(cleaned_output)
+
         return {
             "type": "command",
             "output": cleaned_output,
             "cwd": prompt_info.get("cwd", ""),
             "user": prompt_info.get("user", ""),
             "host": prompt_info.get("host", ""),
+            "raw_mode": is_raw_mode,
         }
 
     async def resize(self, rows: int, cols: int) -> None:

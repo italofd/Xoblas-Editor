@@ -20,6 +20,7 @@ class PtyController:
         self.pid = None
         self.rows = config.DEFAULT_ROWS
         self.cols = config.DEFAULT_COLS
+        self.in_alternate_screen = False
 
     async def create_pty(self, container_id: str) -> None:
         """Create a new PTY connected to the container."""
@@ -128,13 +129,16 @@ class PtyController:
                 return {}
         return {}
 
-    def check_alternate_screen(self, data: bytes) -> str:
+    def check_alternate_screen(self, data: str) -> str:
         """Check if alternate screen mode is entered or exited."""
-        if b"\x1b[?1049h" in data:
-            return "entered"
-        elif b"\x1b[?1049l" in data:
-            return "exited"
-        return "none"
+        if "\x1b[?1049h" in data:
+            self.in_alternate_screen = True
+            return True
+        elif "\x1b[?1049l" in data:
+            self.in_alternate_screen = False
+
+            return False
+        return self.in_alternate_screen
 
     def close(self) -> None:
         """Close the PTY."""

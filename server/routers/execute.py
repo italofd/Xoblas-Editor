@@ -50,7 +50,6 @@ async def execute(
                 },
             )
 
-        print(stderr)
         raise HTTPException(status_code=400, detail={stderr})
 
     except Exception as e:

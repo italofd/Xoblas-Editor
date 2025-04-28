@@ -56,14 +56,22 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
             req_type = json_data.get("type")
 
+            # To execute a terminal command
             if req_type == "command":
                 # Write command to shell
                 result = await shell.execute(json_data.get("command"))
 
                 await websocket.send_json(result)
 
+            # To save a file
             elif req_type == "write_file":
                 await shell.write_to_file(code_content=json_data.get("content"))
+
+            # Indicating raw mode "alternate screen" for text editors
+            elif req_type == "input":
+                result = await shell.execute(json_data.get("data"))
+
+                await websocket.send_json(result)
 
             else:
                 _, cols, rows = json_data.values()

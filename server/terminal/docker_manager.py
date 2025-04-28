@@ -105,6 +105,24 @@ class DockerManager:
         )
         return result.stdout.strip() == "true"
 
+    async def cleanup_vim_locks(self) -> None:
+        """Clean up any vim swap files that might be left."""
+        if self.container_id:
+            try:
+                # Find and remove vim swap files
+                await asyncio.create_subprocess_exec(
+                    "docker",
+                    "exec",
+                    self.container_id,
+                    "bash",
+                    "-c",
+                    "find /home/termuser -name '*.sw[a-p]' -delete",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+            except Exception as e:
+                print(f"Error cleaning up vim locks: {e}")
+
     async def stop_container(self) -> None:
         """Stop and remove the container."""
         if self.container_id:
