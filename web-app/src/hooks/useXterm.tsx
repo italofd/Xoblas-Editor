@@ -36,8 +36,6 @@ export const useTerminal = (
       terminal.options["fontFamily"] = "monospace";
       terminal.options["cursorBlink"] = true;
 
-      // terminal.writeln("Xoblas Terminal =)"); // Welcome message
-
       // Handles keyboard events on the terminal
       const keyDisposable = terminal.onKey(
         handleTerminalKeyEvent(terminal, socket, currentLineRef, promptLengthRef, isRawMode),

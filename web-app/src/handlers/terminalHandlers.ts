@@ -61,7 +61,7 @@ export const onWsData = (
 ) => {
   if (wsData && terminal) {
     // Write command output
-    terminal.writeln(wsData.output);
+    isRawMode ? terminal.write(wsData.output) : terminal.writeln(wsData.output);
 
     //If we are in raw mode we don`t want to writing the prompt
     if (isRawMode) return;

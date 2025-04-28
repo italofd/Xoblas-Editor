@@ -88,7 +88,8 @@ class PtyController:
 
         return output
 
-    async def read_immediate_output(self, timeout: float = 0.5) -> str:
+    # This value must be tested to determine a good approach when deploying as well =')
+    async def read_immediate_output(self, timeout: float = 0.06) -> str:
         """Quickly read available output from PTY."""
         output = ""
         end_time = asyncio.get_event_loop().time() + timeout

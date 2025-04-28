@@ -71,12 +71,11 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
             # Indicating raw mode "alternate screen" for text editors
             elif req_type == "input":
-                shell.log_terminal_input(json_data.get("data"))
                 result = await shell.execute(json_data.get("data"))
 
                 await websocket.send_json(result)
 
-            else:
+            elif req_type == "resize":
                 _, cols, rows = json_data.values()
 
                 await shell.resize(rows, cols)
