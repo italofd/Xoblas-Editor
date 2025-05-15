@@ -124,6 +124,21 @@ class PtyShell:
 
     async def resize(self, rows: int, cols: int) -> None:
         """Resize the terminal."""
+        if self.pty.in_alternate_screen:
+            result = await self.pty.resize(rows, cols, capture_output=True)
+
+            # [TO-DO]: Please do a better approach this is wild LOL
+            return {
+                "type": "command",
+                "output": result,
+                "cwd": "",
+                "user": "",
+                "host": "",
+                "raw_mode": self.pty.in_alternate_screen,
+                # Not used
+                "is_exiting_raw": "",
+            }
+
         await self.pty.resize(rows, cols)
 
     # Helper function to debug raw mode

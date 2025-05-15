@@ -11,6 +11,7 @@ import "../Terminal/terminal.css";
 import dynamic from "next/dynamic";
 import { useSocket } from "@/hooks/useSocket";
 import LoadingOverlay from "../LoaderOverlay";
+import FileStructureNavbar from "../FileStructureNavbar";
 
 const XTerminal = dynamic(() => import("../Terminal/index"), {
   ssr: false,
@@ -21,6 +22,8 @@ export const CodeEditorMainSection = () => {
 
   const socketHook = useSocket();
 
+  //Unify socket calls into a single place
+
   //Whenever we have file data, overwrite the terminal
   //This is used for already used and modified containers so UI don't get out of sync
   //Eventually this can be used to change multiple files (multi file editor with file structure)
@@ -30,21 +33,30 @@ export const CodeEditorMainSection = () => {
   }, [editorRef, socketHook.fileData]);
 
   return (
-    <div className="flex flex-col w-full h-full max-h-full overflow-hidden">
-      <LoadingOverlay isLoading={!socketHook.isEnvReady} />
+    <>
+      <FileStructureNavbar />
 
-      <div className="flex flex-col flex-grow min-h-0">
-        <MainLayout>
-          <CodeEditor
-            onSave={(content) =>
-              socketHook.socket.current?.send(JSON.stringify({ type: "write_file", content }))
-            }
-            editorRef={editorRef}
-          />
-        </MainLayout>
+      <div className="flex flex-col w-full h-full max-h-full overflow-hidden">
+        <LoadingOverlay isLoading={!socketHook.isEnvReady} />
+
+        <div className="flex flex-col flex-grow min-h-0">
+          <MainLayout>
+            <CodeEditor
+              onSave={(content) =>
+                socketHook.sendEvent({
+                  type: "write_file",
+                  data: {
+                    content,
+                  },
+                })
+              }
+              editorRef={editorRef}
+            />
+          </MainLayout>
+        </div>
+
+        <XTerminal socketHook={socketHook} />
       </div>
-
-      <XTerminal socketHook={socketHook} />
-    </div>
+    </>
   );
 };

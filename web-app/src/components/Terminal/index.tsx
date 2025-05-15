@@ -53,7 +53,6 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
         style={{
           height: dimensions.height,
         }}
-        className="pb-12"
       >
         <div className="bg-zinc-800 text-white p-2 rounded-t">Terminal</div>
         <div

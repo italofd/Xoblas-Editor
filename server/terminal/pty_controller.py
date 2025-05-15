@@ -132,8 +132,8 @@ class PtyController:
         output = await self.read_immediate_output()
         print(f"Key sequence output: {output}")
 
-    async def resize(self, rows: int, cols: int) -> None:
-        """Resize the terminal."""
+    async def resize(self, rows: int, cols: int, capture_output: bool = True) -> str:
+        """Resize the terminal, optionally capturing any immediate response."""
         if self.fd is not None:
             self.rows = rows
             self.cols = cols
@@ -144,26 +144,27 @@ class PtyController:
 
             if self.pid is not None and self.is_process_alive():
                 try:
+                    # Send SIGWINCH to notify the shell
                     os.kill(self.pid, signal.SIGWINCH)
 
-                    # Send the stty command
+                    # Tell shell to update its idea of rows/cols
                     await self.write(f"stty columns {cols} rows {rows}\n")
 
-                    # Add a small delay
-                    await asyncio.sleep(0.1)
+                    if capture_output:
+                        # Small wait to let shell react
+                        await asyncio.sleep(0.05)
 
-                    # Clear the buffer
-                    try:
-                        while True:
-                            r, _, _ = select.select([self.fd], [], [], 0.05)
-                            if not r:
-                                break
-                            os.read(self.fd, 4096)
-                    except (OSError, BlockingIOError):
-                        pass
+                        # Read available output after resize
+                        output = await self.read_immediate_output(timeout=0.3)
+                        return output
+                    else:
+                        # If not capturing output, just wait a bit for safety
+                        await asyncio.sleep(0.05)
 
                 except ProcessLookupError:
                     pass
+
+        return ""
 
     def is_process_alive(self) -> bool:
         """Check if the PTY process is still alive."""

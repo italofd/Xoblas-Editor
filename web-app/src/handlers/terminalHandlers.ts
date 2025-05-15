@@ -7,7 +7,7 @@ import { RefObject } from "react";
 
 export type PromptRef = RefObject<number>;
 
-export const createPrompt = (cols: number, wsData: WsData, promptLengthRef: PromptRef) => {
+const createPrompt = (cols: number, wsData: WsData, promptLengthRef: PromptRef) => {
   if (!wsData) return "$ ";
 
   // Full prompt content (without ANSI escape sequences)
@@ -41,9 +41,10 @@ export const createPrompt = (cols: number, wsData: WsData, promptLengthRef: Prom
   return `[${green}${user}@${host}${reset} ${blue}${cwd}${reset}]$ `;
 };
 
-export const handleCommand = (command: string, terminal: Terminal | null, socket: Socket) => {
+const handleCommand = (command: string, terminal: Terminal | null, socket: Socket) => {
   //[TO-DO]: Treat case where its not connected by displaying a error or trying a reconnection
   if (socket.current && socket.current.readyState === WebSocket.OPEN) {
+    //SOCKET CALL
     socket.current.send(JSON.stringify({ type: "command", command }));
 
     //[TO-DO]: Receive response and display, implement path for working directory
@@ -93,9 +94,19 @@ export const handleTerminalKeyEvent =
     isRawMode: boolean,
   ) =>
   ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
+    const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
+    const eventKey = domEvent.key;
+
+    // @ts-expect-error: Internal API to get current cursor position
+    const cursorX = terminal._core.buffer.x;
+
+    const relativePos = cursorX - promptLengthRef.current;
+
     if (isRawMode) {
       if (socket.current && socket.current.readyState === WebSocket.OPEN) {
         // Send the raw key data to the PTY
+
+        //SOCKET CALL
         socket.current.send(
           JSON.stringify({
             type: "input",
@@ -106,14 +117,6 @@ export const handleTerminalKeyEvent =
       }
       return;
     }
-
-    const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
-    const eventKey = domEvent.key;
-
-    // @ts-expect-error: Internal API to get current cursor position
-    const cursorX = terminal._core.buffer.x;
-
-    const relativePos = cursorX - promptLengthRef.current;
 
     if (eventKey === "Enter") {
       terminal.writeln("");

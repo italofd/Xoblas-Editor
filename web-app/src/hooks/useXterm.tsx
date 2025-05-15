@@ -83,6 +83,7 @@ export const useTerminal = (
         terminal.resize(cols, rows);
 
         if (socket.current?.readyState === WebSocket.OPEN) {
+          //SOCKET CALL
           socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
         }
       }

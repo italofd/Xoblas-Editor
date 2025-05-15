@@ -88,6 +88,11 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
             elif req_type == "resize":
                 _, cols, rows = json_data.values()
+                if shell.pty.in_alternate_screen:
+                    result = await shell.resize(rows, cols)
+
+                    await websocket.send_json(result)
+                    return
 
                 await shell.resize(rows, cols)
 

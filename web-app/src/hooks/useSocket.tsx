@@ -1,7 +1,34 @@
 import { TrackAnonymous } from "@/handlers/tracking";
-import { isCommandMessage, isFileMessage, WsCommandMessage, WsFileMessage } from "@/types/socket";
+import {
+  AllSocketEvents,
+  isCommandMessage,
+  isFileMessage,
+  WsCommandMessage,
+  WsFileMessage,
+} from "@/types/socket";
 import { getServerURL } from "@/utils/getServerURL";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+/**
+ * Returns a boolean meaning that we could send the message if returned true or not if false
+ */
+const sendServerEvent = (
+  deps: { socketRef: any; isEnvReady: boolean },
+  params: {
+    type: AllSocketEvents;
+    data: Object;
+  },
+): boolean => {
+  console.log("SLA IRMAO", deps.isEnvReady);
+
+  if (!deps.isEnvReady) return false;
+
+  const { type, data } = params;
+
+  deps.socketRef.current!.send(JSON.stringify({ type, ...data }));
+
+  return true;
+};
 
 export const useSocket = () => {
   const socket = useRef<WebSocket | null>(null);
@@ -20,7 +47,6 @@ export const useSocket = () => {
       getServerURL("ws") + `/ws/terminal/${encodeURIComponent(tracker.getUserID())}`,
     );
 
-    // Connection opened
     webSocket.addEventListener("open", () => {
       //[TO-DO]: Implement ACK
       // webSocket.send("Connection established");
@@ -28,8 +54,6 @@ export const useSocket = () => {
 
     // Listen for messages
     webSocket.addEventListener("message", (event: MessageEvent<string>) => {
-      console.log("Message from server ", event.data);
-
       if (event.data) {
         const parsedJson = JSON.parse(event.data);
 
@@ -55,5 +79,10 @@ export const useSocket = () => {
     if (fileData && wsData && !isEnvReady) setIsEnvReady(true);
   }, [fileData, wsData, isEnvReady]);
 
-  return { socket, wsData, isEnvReady, fileData, isRawMode };
+  const sendEvent = useCallback(sendServerEvent.bind(null, { isEnvReady, socketRef: socket }), [
+    isEnvReady,
+    socket,
+  ]);
+
+  return { socket, wsData, isEnvReady, fileData, isRawMode, sendEvent };
 };

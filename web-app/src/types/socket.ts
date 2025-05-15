@@ -1,3 +1,12 @@
+//Socket communication from client
+export type TerminalEventType = "input" | "resize" | "command";
+
+export type CodeEditorEventType = "write_file";
+
+export type AllSocketEvents = TerminalEventType | CodeEditorEventType;
+//
+
+//Socket communication from server
 export type BaseMessage = {
   type: "command" | "file" | "event";
 };
@@ -32,3 +41,4 @@ export function isFileMessage(message: unknown): message is WsFileMessage {
     message !== null && typeof message === "object" && "type" in message && message.type === "file"
   );
 }
+//
