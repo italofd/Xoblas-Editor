@@ -1,8 +1,8 @@
-# AQ-Take-Home
+# Xoblas terminal
 
 ## How to Get Started
 
-- We are considering, for all examples below, that you are in the main directory "aq-take-home"
+- We are considering, for all examples below, that you are in the main directory "xoblas-terminal"
 
 #### web-app
 
@@ -13,11 +13,11 @@
 #### server
 
 - **Requirements**: Docker Daemon must be up and running!
-    - This may not be compatible if you run on a Windows host. If you encounter any issues, please run it inside a Docker container, as it is provided already as the main Dockerfile
+  - This may not be compatible if you run on a Windows host. If you encounter any issues, please run it inside a Docker container, as it is provided already as the main Dockerfile
 - Open another terminal and execute the following `cd server`
 - Run your virtualenv or other similar tool
 - We recommend for this simple project going with **pip**
-    - Run `pip install -r requirements.tx`
+  - Run `pip install -r requirements.tx`
 - Execute the following to start your local server `fastapi dev main.py` and your server should be started and ready to use
 
 ## Technology Choice / Why

@@ -13,8 +13,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Aq-Take-Home",
-  description: "This is a task that i have received as a test for a position at 'AfterQuery'",
+  title: "Xoblas terminal",
+  description:
+    "This is a task that i have received as a test for a position at 'AfterQuery'" +
+    "But, after the hiring was frozen in the literal list step" +
+    "I decided to move on with the project, since i have felt in love with it =)",
 };
 
 export default function RootLayout({

@@ -19,7 +19,7 @@ router = APIRouter()
 )
 async def get_outputs(
     body: GetOutputsBody,
-    user_id: Annotated[str | None, Header(alias="X-Aqtakehome-User")],
+    user_id: Annotated[str | None, Header(alias="X-xoblas-terminal-User")],
 ):
     quantity = body.quantity
 
