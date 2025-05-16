@@ -10,14 +10,14 @@ import { Resizable, ResizableProps } from "react-resizable";
 import "react-resizable/css/styles.css";
 
 function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> }) {
-  const { isEnvReady, socket, wsData, isRawMode } = socketHook;
+  const { isEnvReady, socket, wsData, isRawMode, handlers } = socketHook;
 
   const charRef = useRef<HTMLDivElement>(null);
   const lastSizeRef = useRef({ cols: 0, rows: 0 });
   const [dimensions, setDimensions] = useState({ height: 280, width: 100 });
 
   const { instance, ref } = useXTerm();
-  const { onResize } = useTerminal(instance, ref, socket, wsData, isRawMode);
+  const { onResize } = useTerminal(instance, ref, socket, wsData, isRawMode, handlers);
 
   //Resize Observer
   useEffect(() => {

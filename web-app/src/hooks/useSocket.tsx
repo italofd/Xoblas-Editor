@@ -9,33 +9,24 @@ import {
 import { getServerURL } from "@/utils/getServerURL";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-/**
- * Returns a boolean meaning that we could send the message if returned true or not if false
- */
-const sendServerEvent = (
-  deps: { socketRef: any; isEnvReady: boolean },
-  params: {
-    type: AllSocketEvents;
-    data: Object;
-  },
-): boolean => {
-  console.log("SLA IRMAO", deps.isEnvReady);
-
-  if (!deps.isEnvReady) return false;
-
-  const { type, data } = params;
-
-  deps.socketRef.current!.send(JSON.stringify({ type, ...data }));
-
-  return true;
-};
-
 export const useSocket = () => {
   const socket = useRef<WebSocket | null>(null);
   const [wsData, setWsData] = useState<WsCommandMessage | null>(null);
   const [fileData, setFileData] = useState<WsFileMessage | null>(null);
   const [isRawMode, setIsRawMode] = useState(false);
   const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
+  // ref for keeping fresh value accessible inside closures
+  const isEnvReadyRef = useRef(isEnvReady);
+
+  /**
+   * Returns a boolean meaning that we could send the message if returned true or not if false
+   */
+  const sendEvent = useCallback((params: { type: AllSocketEvents; data: Object }) => {
+    if (!isEnvReadyRef.current) return false;
+
+    socket.current!.send(JSON.stringify({ type: params.type, ...params.data }));
+    return true;
+  }, []);
 
   useEffect(() => {
     if (socket.current) return;
@@ -47,10 +38,10 @@ export const useSocket = () => {
       getServerURL("ws") + `/ws/terminal/${encodeURIComponent(tracker.getUserID())}`,
     );
 
-    webSocket.addEventListener("open", () => {
-      //[TO-DO]: Implement ACK
-      // webSocket.send("Connection established");
-    });
+    // webSocket.addEventListener("open", () => {
+    //   //[TO-DO]: Implement ACK
+    //   // webSocket.send("Connection established");
+    // });
 
     // Listen for messages
     webSocket.addEventListener("message", (event: MessageEvent<string>) => {
@@ -79,10 +70,16 @@ export const useSocket = () => {
     if (fileData && wsData && !isEnvReady) setIsEnvReady(true);
   }, [fileData, wsData, isEnvReady]);
 
-  const sendEvent = useCallback(sendServerEvent.bind(null, { isEnvReady, socketRef: socket }), [
-    isEnvReady,
-    socket,
-  ]);
+  useEffect(() => {
+    isEnvReadyRef.current = isEnvReady;
+  }, [isEnvReady]);
 
-  return { socket, wsData, isEnvReady, fileData, isRawMode, sendEvent };
+  return {
+    socket,
+    wsData,
+    isEnvReady,
+    fileData,
+    isRawMode,
+    handlers: { sendEvent },
+  };
 };

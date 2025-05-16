@@ -42,14 +42,14 @@ export const CodeEditorMainSection = () => {
         <div className="flex flex-col flex-grow min-h-0">
           <MainLayout>
             <CodeEditor
-              onSave={(content) =>
-                socketHook.sendEvent({
+              onSave={(content) => {
+                socketHook.handlers.sendEvent({
                   type: "write_file",
                   data: {
                     content,
                   },
-                })
-              }
+                });
+              }}
               editorRef={editorRef}
             />
           </MainLayout>

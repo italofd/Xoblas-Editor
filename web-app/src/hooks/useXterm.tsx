@@ -3,7 +3,7 @@ import { Terminal } from "@xterm/xterm";
 import { RefObject, useEffect, useMemo, useRef } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { handleTerminalKeyEvent, onWsData } from "@/handlers/terminalHandlers";
-import { Socket, WsData } from "@/types/terminal";
+import { Handlers, Socket, WsData } from "@/types/terminal";
 
 /**
  * The approach i have follow is that the all the UI logic involving user input
@@ -16,6 +16,7 @@ export const useTerminal = (
   socket: Socket,
   wsData: WsData,
   isRawMode: boolean,
+  handlers: Handlers,
 ) => {
   //Current line is just user input
   const currentLineRef = useRef("");
@@ -38,7 +39,7 @@ export const useTerminal = (
 
       // Handles keyboard events on the terminal
       const keyDisposable = terminal.onKey(
-        handleTerminalKeyEvent(terminal, socket, currentLineRef, promptLengthRef, isRawMode),
+        handleTerminalKeyEvent(terminal, currentLineRef, promptLengthRef, isRawMode, handlers),
       );
 
       // Clean up handlers on unmount
@@ -55,7 +56,7 @@ export const useTerminal = (
   );
 
   return {
-    //[TO-DO]: Fix resize that have broken after better commands control (backspace is broken and delete or/and insert)
+    //[TO-DO]: Fix resize when inside a alternate screen its not following up and its breaking afterwards
     onResize: (
       lastSizeRef: RefObject<{
         cols: number;

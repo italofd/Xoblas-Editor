@@ -1,12 +1,19 @@
-// Function to create an appropriately sized prompt based on terminal width
-
 import { blue, green, reset } from "@/constants/terminal";
-import { Socket, WsData } from "@/types/terminal";
+import { Handlers, Socket, WsData } from "@/types/terminal";
 import { Terminal } from "@xterm/xterm";
 import { RefObject } from "react";
 
 export type PromptRef = RefObject<number>;
 
+// ANSI escape sequences for terminal operations
+const ANSI = {
+  CURSOR_LEFT: "\x1b[D",
+  CURSOR_RIGHT: "\x1b[C",
+  SAVE_CURSOR: "\u001B[s",
+  MOVE_LEFT: (n: number) => `\x1b[${n}D`,
+};
+
+// Function to create an appropriately sized prompt based on terminal width
 const createPrompt = (cols: number, wsData: WsData, promptLengthRef: PromptRef) => {
   if (!wsData) return "$ ";
 
@@ -41,16 +48,19 @@ const createPrompt = (cols: number, wsData: WsData, promptLengthRef: PromptRef) 
   return `[${green}${user}@${host}${reset} ${blue}${cwd}${reset}]$ `;
 };
 
-const handleCommand = (command: string, terminal: Terminal | null, socket: Socket) => {
-  //[TO-DO]: Treat case where its not connected by displaying a error or trying a reconnection
-  if (socket.current && socket.current.readyState === WebSocket.OPEN) {
-    //SOCKET CALL
-    socket.current.send(JSON.stringify({ type: "command", command }));
+// Helper function to update line content when inserting/deleting characters
+const updateLine = (terminal: Terminal, currentLine: string, relativePos: number) => {
+  const remaining = currentLine.slice(relativePos);
+  terminal.write(remaining + " ");
+  terminal.write(ANSI.MOVE_LEFT(remaining.length + 1));
+};
 
-    //[TO-DO]: Receive response and display, implement path for working directory
-  } else if (terminal) {
-    terminal.writeln("Not connected to server.");
-  }
+const handleCommand = (command: string, terminal: Terminal | null, handlers: Handlers) => {
+  //[TO-DO]: Treat case where its not connected by displaying a error or trying a reconnection
+  const res = handlers.sendEvent({ type: "command", data: { command } });
+
+  //[TO-DO]: Receive response and display, implement path for working directory
+  if (!res && terminal) terminal.writeln("Not connected to server.");
 };
 
 export const onWsData = (
@@ -81,17 +91,17 @@ export const onWsData = (
     currentLineRef.current = " ";
 
     // Write new prompt and save cursor position
-    terminal.write(`${prompt}\u001B[s`);
+    terminal.write(`${prompt}${ANSI.SAVE_CURSOR}`);
   }
 };
 
 export const handleTerminalKeyEvent =
   (
     terminal: Terminal,
-    socket: Socket,
     currentLineRef: RefObject<string>,
     promptLengthRef: PromptRef,
     isRawMode: boolean,
+    handlers: Handlers,
   ) =>
   ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
     const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
@@ -102,91 +112,81 @@ export const handleTerminalKeyEvent =
 
     const relativePos = cursorX - promptLengthRef.current;
 
+    // Handle raw mode separately
     if (isRawMode) {
-      if (socket.current && socket.current.readyState === WebSocket.OPEN) {
-        // Send the raw key data to the PTY
-
-        //SOCKET CALL
-        socket.current.send(
-          JSON.stringify({
-            type: "input",
-            data: key,
-            specialKey: domEvent.key, // This allows the backend to know about special keys
-          }),
-        );
-      }
+      handlers.sendEvent({
+        type: "input",
+        data: { specialKey: domEvent.key, data: key },
+      });
       return;
     }
 
-    if (eventKey === "Enter") {
-      terminal.writeln("");
-      handleCommand(currentLineRef.current, terminal, socket);
-      currentLineRef.current = " ";
-      return;
-    }
+    switch (eventKey) {
+      case "Enter":
+        terminal.writeln("");
+        handleCommand(currentLineRef.current, terminal, handlers);
+        currentLineRef.current = " ";
+        break;
 
-    if (eventKey === "Backspace") {
-      if (cursorX > promptLengthRef.current) {
-        currentLineRef.current =
-          currentLineRef.current.slice(0, relativePos - 1) +
-          currentLineRef.current.slice(relativePos);
+      case "Backspace":
+        if (cursorX > promptLengthRef.current) {
+          currentLineRef.current =
+            currentLineRef.current.slice(0, relativePos - 1) +
+            currentLineRef.current.slice(relativePos);
 
-        terminal.write("\x1b[D");
+          terminal.write(ANSI.CURSOR_LEFT);
+          updateLine(terminal, currentLineRef.current, relativePos - 1);
+        }
+        break;
 
-        const remaining = currentLineRef.current.slice(relativePos - 1);
-        terminal.write(remaining + " ");
-        terminal.write(`\x1b[${remaining.length + 1}D`);
-      }
-      return;
-    }
+      case "Delete":
+        if (relativePos < currentLineRef.current.length) {
+          currentLineRef.current =
+            currentLineRef.current.slice(0, relativePos) +
+            currentLineRef.current.slice(relativePos + 1);
 
-    if (eventKey === "Delete") {
-      if (relativePos < currentLineRef.current.length) {
-        currentLineRef.current =
-          currentLineRef.current.slice(0, relativePos) +
-          currentLineRef.current.slice(relativePos + 1);
+          updateLine(terminal, currentLineRef.current, relativePos);
+        }
+        break;
 
-        const remaining = currentLineRef.current.slice(relativePos);
-        terminal.write(remaining + " ");
-        terminal.write(`\x1b[${remaining.length + 1}D`);
-      }
-      return;
-    }
+      case "ArrowUp":
+      case "ArrowDown":
+        // [TO-DO]: Implement History =)
+        break;
 
-    if (eventKey === "ArrowUp" || eventKey === "ArrowDown") {
-      // [TO-DO]: Implement History =)
-      return;
-    }
+      case "ArrowLeft":
+        if (cursorX > promptLengthRef.current) {
+          terminal.write(ANSI.CURSOR_LEFT);
+        }
+        break;
 
-    if (eventKey === "ArrowLeft") {
-      if (cursorX > promptLengthRef.current) {
-        terminal.write("\x1b[D");
-      }
-      return;
-    }
+      case "ArrowRight":
+        if (cursorX < promptLengthRef.current + currentLineRef.current.length) {
+          terminal.write(ANSI.CURSOR_RIGHT);
+        }
+        break;
 
-    if (eventKey === "ArrowRight") {
-      if (cursorX < promptLengthRef.current + currentLineRef.current.length) {
-        terminal.write("\x1b[C");
-      }
-      return;
-    }
+      case "End":
+      case "Home":
+      case "Insert":
+        // [TO-DO]: Breaking events that need proper handling
+        break;
 
-    //[TO-DO]: Breaking events that needs proper handling
-    if (eventKey === "End" || eventKey === "Home" || eventKey === "Insert") return;
+      default:
+        if (printable) {
+          currentLineRef.current =
+            currentLineRef.current.slice(0, relativePos) +
+            key +
+            currentLineRef.current.slice(relativePos);
 
-    if (printable) {
-      currentLineRef.current =
-        currentLineRef.current.slice(0, relativePos) +
-        key +
-        currentLineRef.current.slice(relativePos);
+          // Overwrite from cursor position to end of line
+          const tail = currentLineRef.current.slice(relativePos);
+          terminal.write(tail);
 
-      // Overwrite from cursor position to end of line
-      const tail = currentLineRef.current.slice(relativePos);
-      terminal.write(tail);
-
-      // Move cursor back to just after inserted char
-      const movesLeft = tail.length - 1;
-      if (movesLeft > 0) terminal.write(`\x1b[${movesLeft}D`);
+          // Move cursor back to just after inserted char
+          const movesLeft = tail.length - 1;
+          if (movesLeft > 0) terminal.write(ANSI.MOVE_LEFT(movesLeft));
+        }
+        break;
     }
   };
