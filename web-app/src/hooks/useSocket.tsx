@@ -7,7 +7,7 @@ import {
   WsFileMessage,
 } from "@/types/socket";
 import { getServerURL } from "@/utils/getServerURL";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const useSocket = () => {
   const socket = useRef<WebSocket | null>(null);
@@ -15,6 +15,7 @@ export const useSocket = () => {
   const [fileData, setFileData] = useState<WsFileMessage | null>(null);
   const [isRawMode, setIsRawMode] = useState(false);
   const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
+
   // ref for keeping fresh value accessible inside closures
   const isEnvReadyRef = useRef(isEnvReady);
 

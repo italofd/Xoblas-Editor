@@ -50,14 +50,15 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
       handle={<span className="absolute top-0 left-0 w-full h-2 cursor-n-resize z-10" />}
     >
       <div
+        className="flex flex-col"
         style={{
           height: dimensions.height,
         }}
       >
-        <div className="bg-zinc-800 text-white p-2 rounded-t">Terminal</div>
+        <div className="h-9 bg-zinc-800 text-white p-2 rounded-t">Terminal</div>
         <div
           ref={ref}
-          className="flex flex-grow h-full min-h-0 bg-black rounded-b overflow-hidden text-base relative"
+          className="flex flex-grow flex-1 bg-black rounded-b overflow-hidden text-base relative"
         />
         <div ref={charRef} className="invisible absolute top-0 left-0 whitespace-pre">
           M
