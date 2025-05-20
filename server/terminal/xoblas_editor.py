@@ -7,7 +7,7 @@ from terminal.terminal_config import TerminalConfig
 import re
 
 
-class PtyShell:
+class XoblasEditor:
     def __init__(
         self,
         user_id: str,
@@ -28,6 +28,9 @@ class PtyShell:
         self.docker = DockerManager(user_id, self.config)
         self.pty = PtyController(self.config)
         self.file_manager = None  # Will be initialized after container starts
+
+        # This can be changed trough the "xoblas" keyword
+        self.editor_wd = "/home/termuser/root/"
 
         self.last_output = ""
 
@@ -51,14 +54,6 @@ class PtyShell:
 
         # Read initial output
         self.last_output = await self.pty.read_until_prompt()
-
-    async def write_to_file(self, code_content: str) -> Dict[str, str]:
-        """Write content to a file in the container."""
-        return await self.file_manager.write_file(code_content)
-
-    async def read_from_file(self, file_path: str = "/home/termuser/main.py") -> str:
-        """Read content from a file in the container."""
-        return await self.file_manager.read_file(file_path)
 
     async def execute(self, command: str) -> Dict[str, str]:
         """Execute a command in the shell"""
@@ -122,6 +117,17 @@ class PtyShell:
             "is_exiting_raw": is_exiting_raw,
         }
 
+    async def xoblas_editor_command(self, command: str):
+        # Execute xoblas command in the docker linux env
+        stdout, stderr = await self.docker.exec_command(command)
+
+        if stderr:
+            raise Exception(f"Error getting file structure: {stderr.decode()}")
+
+        print(stdout)
+
+        return stdout.decode()
+
     async def resize(self, rows: int, cols: int) -> None:
         """Resize the terminal."""
         if self.pty.in_alternate_screen:
@@ -140,6 +146,26 @@ class PtyShell:
             }
 
         await self.pty.resize(rows, cols)
+
+    async def write_to_file(self, code_content: str) -> Dict[str, str]:
+        """Write content to a file in the container."""
+        return await self.file_manager.write_file(code_content)
+
+    async def read_from_file(
+        self, file_path: str = "/home/termuser/root/main.py"
+    ) -> str:
+        """Read content from a file in the container."""
+        return await self.file_manager.read_file(file_path)
+
+    def is_xoblas_command(self, command: str) -> bool:
+        # Strip leading whitespace and split by whitespace
+        words = command.strip().split()
+
+        # Check if there are words and if the first one is "xoblas"
+        if words and words[0].lower() == "xoblas":
+            return True
+        else:
+            return False
 
     # Helper function to debug raw mode
     def log_terminal_input(self, input_str: str):

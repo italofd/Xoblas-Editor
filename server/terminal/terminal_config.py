@@ -10,4 +10,4 @@ class TerminalConfig:
     PROMPT_PREFIX = "__START__"
     PROMPT_SUFFIX = "__END__$"
     # This will be used to create a file structure to be rendered in the future
-    CURRENT_WORKDIR = "/home/termuser/"
+    CURRENT_WORKDIR = "/home/termuser/root/"

@@ -3,8 +3,10 @@ import {
   AllSocketEvents,
   isCommandMessage,
   isFileMessage,
+  isXoblasMessage,
   WsCommandMessage,
   WsFileMessage,
+  WsXoblasMessage,
 } from "@/types/socket";
 import { getServerURL } from "@/utils/getServerURL";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -15,6 +17,7 @@ export const useSocket = () => {
   const [fileData, setFileData] = useState<WsFileMessage | null>(null);
   const [isRawMode, setIsRawMode] = useState(false);
   const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
+  const [fileStructure, setFileStructure] = useState<WsXoblasMessage["file_structure"]>();
 
   // ref for keeping fresh value accessible inside closures
   const isEnvReadyRef = useRef(isEnvReady);
@@ -39,11 +42,6 @@ export const useSocket = () => {
       getServerURL("ws") + `/ws/terminal/${encodeURIComponent(tracker.getUserID())}`,
     );
 
-    // webSocket.addEventListener("open", () => {
-    //   //[TO-DO]: Implement ACK
-    //   // webSocket.send("Connection established");
-    // });
-
     // Listen for messages
     webSocket.addEventListener("message", (event: MessageEvent<string>) => {
       if (event.data) {
@@ -55,7 +53,12 @@ export const useSocket = () => {
           setIsRawMode(parsedJson.raw_mode);
           setWsData(parsedJson);
         }
+
         if (isFileMessage(parsedJson)) setFileData(parsedJson);
+
+        if (isXoblasMessage(parsedJson)) {
+          setFileStructure(parsedJson.file_structure);
+        }
       }
     });
 
@@ -81,6 +84,7 @@ export const useSocket = () => {
     isEnvReady,
     fileData,
     isRawMode,
+    fileStructure,
     handlers: { sendEvent },
   };
 };

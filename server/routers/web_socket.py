@@ -1,12 +1,12 @@
 from fastapi import WebSocket, APIRouter
 from typing import Dict
-from terminal.pty_shell import PtyShell
+from terminal.xoblas_editor import XoblasEditor
 import json
 import re
 
 
 # Dictionary to store active terminal sessions
-active_terminals: Dict[str, PtyShell] = {}
+active_terminals: Dict[str, XoblasEditor] = {}
 
 
 router = APIRouter(
@@ -30,18 +30,18 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
         await websocket.accept()
 
         # Create and start a new PTY shell session
-        shell = PtyShell(user_id=sanitized)
-        await shell.start()
+        editor = XoblasEditor(user_id=sanitized)
+        await editor.start()
 
-        active_terminals[session_id] = shell
+        active_terminals[session_id] = editor
 
         # Send initial prompt (perhaps, it could be executed in the initialization)
-        initial_result = await shell.execute("")
+        initial_result = await editor.execute("")
 
         await websocket.send_json(initial_result)
 
         # Sync file stored on container with UI
-        main_file = await shell.read_from_file()
+        main_file = await editor.read_from_file()
 
         # File path will be implemented if we have multiple of them =) (multi file editor)
         await websocket.send_json(
@@ -60,22 +60,34 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
             # To execute a terminal command
             if req_type == "command":
+                command = json_data.get("command")
+
+                # If we are running a xoblas main command avoid doing at the terminal (shell) level
+                if editor.is_xoblas_command(command):
+                    file_structure = await editor.xoblas_editor_command(command)
+
+                    await websocket.send_json(
+                        {"type": "xoblas", "file_structure": json.loads(file_structure)}
+                    )
+
+                    return
+
                 # Write command to shell
-                result = await shell.execute(json_data.get("command"))
+                result = await editor.execute(command)
 
                 await websocket.send_json(result)
 
             # To save a file
             elif req_type == "write_file":
-                await shell.write_to_file(code_content=json_data.get("content"))
+                await editor.write_to_file(code_content=json_data.get("content"))
 
             # Indicating raw mode "alternate screen" for text editors
             elif req_type == "input":
-                result = await shell.execute(json_data.get("data"))
+                result = await editor.execute(json_data.get("data"))
 
                 # [TO-DO]: Make this object trough a function instead of repeating code
                 if result.get("is_exiting_raw"):
-                    file = await shell.read_from_file()
+                    file = await editor.read_from_file()
                     await websocket.send_json(
                         {
                             "type": "file",
@@ -88,19 +100,19 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
             elif req_type == "resize":
                 _, cols, rows = json_data.values()
-                if shell.pty.in_alternate_screen:
-                    result = await shell.resize(rows, cols)
+                if editor.pty.in_alternate_screen:
+                    result = await editor.resize(rows, cols)
 
                     await websocket.send_json(result)
                     return
 
-                await shell.resize(rows, cols)
+                await editor.resize(rows, cols)
 
     except Exception as e:
         print(f"Terminal error: {e}")
-        await shell.close()
+        await editor.close()
 
     finally:
         # Clean up the shell session
         if session_id in active_terminals:
-            await shell.close()
+            await editor.close()

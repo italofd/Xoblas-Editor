@@ -9,7 +9,7 @@ class FileManager:
         self.docker_manager = docker_manager
 
     async def write_file(
-        self, content: str, file_path: str = "/home/termuser/main.py"
+        self, content: str, file_path: str = "/home/termuser/root/main.py"
     ) -> Dict[str, str]:
         """Write content to a file in the container."""
         # Base64 encode to handle special characters
@@ -26,7 +26,7 @@ class FileManager:
                 "message": f"Failed to update file: {stderr.decode()}",
             }
 
-    async def read_file(self, file_path: str = "/home/termuser/main.py") -> str:
+    async def read_file(self, file_path: str = "/home/termuser/root/main.py") -> str:
         """Read content from a file in the container."""
         stdout, stderr = await self.docker_manager.exec_command(f"cat {file_path}")
 

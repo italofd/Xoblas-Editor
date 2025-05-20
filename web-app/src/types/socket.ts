@@ -8,7 +8,7 @@ export type AllSocketEvents = TerminalEventType | CodeEditorEventType;
 
 //Socket communication from server
 export type BaseMessage = {
-  type: "command" | "file" | "event";
+  type: "command" | "file" | "event" | "xoblas";
 };
 
 //[TO-DO]: Export this somewhere else
@@ -25,6 +25,10 @@ export interface WsFileMessage extends BaseMessage {
   content: string;
 }
 
+export interface WsXoblasMessage extends BaseMessage {
+  file_structure: Object[];
+}
+
 // Type guard for WsCommandMessage
 export function isCommandMessage(message: unknown): message is WsCommandMessage {
   return (
@@ -39,6 +43,15 @@ export function isCommandMessage(message: unknown): message is WsCommandMessage 
 export function isFileMessage(message: unknown): message is WsFileMessage {
   return (
     message !== null && typeof message === "object" && "type" in message && message.type === "file"
+  );
+}
+
+export function isXoblasMessage(message: unknown): message is WsXoblasMessage {
+  return (
+    message !== null &&
+    typeof message === "object" &&
+    "type" in message &&
+    message.type === "xoblas"
   );
 }
 //

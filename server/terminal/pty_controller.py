@@ -64,6 +64,7 @@ class PtyController:
 
     async def write(self, data: str) -> None:
         """Write raw data to the PTY."""
+        # [TO-DO]: We should use is_process_alive for that
         if self.fd is not None:
             os.write(self.fd, data.encode())
 
@@ -103,6 +104,7 @@ class PtyController:
 
     async def get_terminal_dimensions(self) -> Tuple[int, int]:
         """Get the current terminal width (columns) and height (rows)."""
+        # [TO-DO]: We should use is_process_alive for that
         if self.fd is None:
             return self.cols, self.rows  # Fallback to defaults if no pty
 
@@ -116,21 +118,6 @@ class PtyController:
         except (OSError, IOError) as e:
             print(f"Error getting terminal dimensions: {e}")
             return self.cols, self.rows  # Fallback to stored values
-
-    async def debug_terminal_settings(self):
-        """Print detailed terminal settings for debugging."""
-        await self.write("stty -a > /tmp/stty_settings\n")
-        await self.write("cat /tmp/stty_settings\n")
-        await asyncio.sleep(0.2)
-        output = await self.read_immediate_output()
-        print(f"Terminal settings: {output}")
-        # Test key sequences
-        await self.write("showkey -a\n")  # This will show raw key codes
-        # Press arrow keys here and observe output
-        await asyncio.sleep(5)  # Give time to press keys
-        await self.write("\x03")  # Send Ctrl+C to exit showkey
-        output = await self.read_immediate_output()
-        print(f"Key sequence output: {output}")
 
     async def resize(self, rows: int, cols: int, capture_output: bool = True) -> str:
         """Resize the terminal, optionally capturing any immediate response."""
