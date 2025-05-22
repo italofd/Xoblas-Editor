@@ -34,7 +34,7 @@ export const CodeEditorMainSection = () => {
 
   return (
     <>
-      <FileStructureNavbar />
+      <FileStructureNavbar structure={socketHook.fileStructure} />
 
       <div className="flex flex-col w-full h-full max-h-full overflow-hidden">
         <LoadingOverlay isLoading={!socketHook.isEnvReady} />

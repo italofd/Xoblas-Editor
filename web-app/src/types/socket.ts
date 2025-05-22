@@ -26,7 +26,7 @@ export interface WsFileMessage extends BaseMessage {
 }
 
 export interface WsXoblasMessage extends BaseMessage {
-  file_structure: Object[];
+  file_structure: TreeCommandNode[];
 }
 
 // Type guard for WsCommandMessage
@@ -55,3 +55,12 @@ export function isXoblasMessage(message: unknown): message is WsXoblasMessage {
   );
 }
 //
+
+/**
+ * Interface for tree command JSON output
+ */
+export interface TreeCommandNode {
+  type: "directory" | "file" | "link";
+  name: string;
+  contents?: TreeCommandNode[];
+}

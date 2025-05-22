@@ -1,45 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 
-import { FileTreeStructure } from "@/types/filestructure";
 import { FileTree } from "./FileTree";
+import { FileStructure } from "@/types/terminal";
 
-const fileStructure: FileTreeStructure = {
-  "package.json": null,
-  "very-long-configuration-file-with-an-extremely-descriptive-name.json": null,
-  "tailwind.config.js": null,
-  public: {
-    "favicon.ico": null,
-    "logo.svg": null,
-  },
-  src: {
-    pages: {
-      "index.js": null,
-      "about.js": null,
-      "_app.js": null,
-      api: {
-        "hello.js": null,
-      },
-    },
-    components: {
-      "Navbar.jsx": null,
-      "Button.jsx": null,
-      "Card.jsx": null,
-      Layout: {
-        "Header.jsx": null,
-        "Footer.jsx": null,
-        "Sidebar.jsx": null,
-      },
-    },
-    styles: {
-      "globals.css": null,
-    },
-    utils: {
-      "helpers.js": null,
-    },
-  },
-};
-
-export default function FileStructureNavbar() {
+export default function FileStructureNavbar({ structure }: { structure: FileStructure }) {
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [width, setWidth] = useState<number>(256);
   const [isResizing, setIsResizing] = useState<boolean>(false);
@@ -100,7 +64,7 @@ export default function FileStructureNavbar() {
       </div>
       <div className="space-y-0.5">
         <FileTree
-          structure={fileStructure}
+          structure={structure}
           expandedFolders={expandedFolders}
           toggleFolder={toggleFolder}
         />

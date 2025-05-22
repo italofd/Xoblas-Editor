@@ -57,6 +57,8 @@ const updateLine = (terminal: Terminal, currentLine: string, relativePos: number
 
 const handleCommand = (command: string, terminal: Terminal | null, handlers: Handlers) => {
   //[TO-DO]: Treat case where its not connected by displaying a error or trying a reconnection
+  console.log("EVA04 INSIDE HANDLE", command);
+
   const res = handlers.sendEvent({ type: "command", data: { command } });
 
   //[TO-DO]: Receive response and display, implement path for working directory
@@ -70,29 +72,50 @@ export const onWsData = (
   currentLineRef: RefObject<string>,
   isRawMode: boolean,
 ) => {
-  if (wsData && terminal) {
-    // Write command output
-    if (isRawMode) {
-      terminal.write(wsData.output);
+  if (!wsData || !terminal) return;
 
-      //If we are in raw mode we don`t want to writing the prompt
-      return;
-    } else {
-      terminal.writeln(wsData.output);
-    }
+  // Write command output
+  if (isRawMode) {
+    terminal.write(wsData.output);
 
-    // Get terminal width
-    const dimensions = terminal.cols;
-
-    // Generate prompt and update promptLengthRef
-    const prompt = createPrompt(dimensions, wsData, promptLengthRef);
-
-    // Reset line buffer after command completes
-    currentLineRef.current = " ";
-
-    // Write new prompt and save cursor position
-    terminal.write(`${prompt}${ANSI.SAVE_CURSOR}`);
+    //If we are in raw mode we don`t want to writing the prompt
+    return;
+  } else {
+    terminal.writeln(wsData.output);
   }
+
+  // Get terminal width
+  const dimensions = terminal.cols;
+
+  // Generate prompt and update promptLengthRef
+  const prompt = createPrompt(dimensions, wsData, promptLengthRef);
+
+  // Reset line buffer after command completes
+  currentLineRef.current = " ";
+
+  // Write new prompt and save cursor position
+  terminal.write(`${prompt}${ANSI.SAVE_CURSOR}`);
+};
+
+export const resetTerminal = (
+  wsData: WsData,
+  terminal: Terminal | null,
+  promptLengthRef: PromptRef,
+  currentLineRef: RefObject<string>,
+) => {
+  if (!wsData || !terminal) return;
+
+  // Get terminal width
+  const dimensions = terminal.cols;
+
+  // Generate prompt and update promptLengthRef
+  const prompt = createPrompt(dimensions, wsData, promptLengthRef);
+
+  // Reset line buffer after command completes
+  currentLineRef.current = " ";
+
+  // Write new prompt and save cursor position
+  terminal.write(`${prompt}${ANSI.SAVE_CURSOR}`);
 };
 
 export const handleTerminalKeyEvent =
@@ -103,7 +126,8 @@ export const handleTerminalKeyEvent =
     isRawMode: boolean,
     handlers: Handlers,
   ) =>
-  ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
+  // Async just for the clipboard for now, i want to remove the this dependency when i can
+  async ({ key, domEvent }: { key: string; domEvent: KeyboardEvent }) => {
     const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
     const eventKey = domEvent.key;
 
@@ -111,6 +135,28 @@ export const handleTerminalKeyEvent =
     const cursorX = terminal._core.buffer.x;
 
     const relativePos = cursorX - promptLengthRef.current;
+
+    if (!isRawMode && (domEvent.ctrlKey || domEvent.metaKey) && eventKey.toLowerCase() === "v") {
+      domEvent.preventDefault();
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          currentLineRef.current =
+            currentLineRef.current.slice(0, relativePos) +
+            text +
+            currentLineRef.current.slice(relativePos);
+
+          const tail = currentLineRef.current.slice(relativePos);
+          terminal.write(tail);
+
+          const movesLeft = tail.length - 1;
+          if (movesLeft > 0) terminal.write(ANSI.MOVE_LEFT(movesLeft));
+        }
+      } catch (err) {
+        console.error("Paste failed:", err);
+      }
+      return;
+    }
 
     // Handle raw mode separately
     if (isRawMode) {

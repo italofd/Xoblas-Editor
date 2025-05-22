@@ -2,8 +2,8 @@
 import { Terminal } from "@xterm/xterm";
 import { RefObject, useEffect, useMemo, useRef } from "react";
 import { FitAddon } from "@xterm/addon-fit";
-import { handleTerminalKeyEvent, onWsData } from "@/handlers/terminalHandlers";
-import { Handlers, Socket, WsData } from "@/types/terminal";
+import { handleTerminalKeyEvent, onWsData, resetTerminal } from "@/handlers/terminalHandlers";
+import { FileStructure, Handlers, Socket, WsData } from "@/types/terminal";
 
 /**
  * The approach i have follow is that the all the UI logic involving user input
@@ -15,6 +15,7 @@ export const useTerminal = (
   ref: RefObject<HTMLDivElement>,
   socket: Socket,
   wsData: WsData,
+  fileStructure: FileStructure,
   isRawMode: boolean,
   handlers: Handlers,
 ) => {
@@ -55,6 +56,12 @@ export const useTerminal = (
     [wsData, terminal, promptLengthRef, currentLineRef, isRawMode],
   );
 
+  //[TO-DO]: rethink that solution as it will not work long time with other and more complex states
+  useEffect(
+    () => resetTerminal(wsData, terminal, promptLengthRef, currentLineRef),
+    [fileStructure],
+  );
+
   return {
     //[TO-DO]: Fix resize when inside a alternate screen its not following up and its breaking afterwards
     onResize: (
@@ -85,6 +92,7 @@ export const useTerminal = (
 
         if (socket.current?.readyState === WebSocket.OPEN) {
           //SOCKET CALL
+          //[TO-DO]: Pass it over trough send event not directly, avoid checking for state
           socket.current.send(JSON.stringify({ type: "resize", cols, rows }));
         }
       }

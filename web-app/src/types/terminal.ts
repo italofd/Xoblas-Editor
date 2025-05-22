@@ -4,3 +4,4 @@ import { useSocket } from "@/hooks/useSocket";
 export type WsData = ReturnType<typeof useSocket>["wsData"];
 export type Socket = ReturnType<typeof useSocket>["socket"];
 export type Handlers = ReturnType<typeof useSocket>["handlers"];
+export type FileStructure = ReturnType<typeof useSocket>["fileStructure"];

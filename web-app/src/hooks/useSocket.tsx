@@ -1,4 +1,6 @@
+import { convertTreeCommandToFileStructure } from "@/components/FileStructureNavbar/utils";
 import { TrackAnonymous } from "@/handlers/tracking";
+import { FileTreeStructure } from "@/types/filestructure";
 import {
   AllSocketEvents,
   isCommandMessage,
@@ -6,7 +8,6 @@ import {
   isXoblasMessage,
   WsCommandMessage,
   WsFileMessage,
-  WsXoblasMessage,
 } from "@/types/socket";
 import { getServerURL } from "@/utils/getServerURL";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -17,7 +18,7 @@ export const useSocket = () => {
   const [fileData, setFileData] = useState<WsFileMessage | null>(null);
   const [isRawMode, setIsRawMode] = useState(false);
   const [isEnvReady, setIsEnvReady] = useState<boolean>(false);
-  const [fileStructure, setFileStructure] = useState<WsXoblasMessage["file_structure"]>();
+  const [fileStructure, setFileStructure] = useState<FileTreeStructure | null>(null);
 
   // ref for keeping fresh value accessible inside closures
   const isEnvReadyRef = useRef(isEnvReady);
@@ -57,7 +58,8 @@ export const useSocket = () => {
         if (isFileMessage(parsedJson)) setFileData(parsedJson);
 
         if (isXoblasMessage(parsedJson)) {
-          setFileStructure(parsedJson.file_structure);
+          console.log("EVA04", parsedJson);
+          setFileStructure(convertTreeCommandToFileStructure(parsedJson.file_structure));
         }
       }
     });

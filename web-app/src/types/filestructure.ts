@@ -1,3 +1,5 @@
+import { FileStructure } from "./terminal";
+
 export type FileTreeStructure = {
   [key: string]: FileTreeStructure | null;
 };
@@ -16,7 +18,7 @@ export interface FolderItemProps {
 }
 
 export interface FileTreeProps {
-  structure: FileTreeStructure;
+  structure: FileStructure;
   expandedFolders: Record<string, boolean>;
   toggleFolder: (path: string) => void;
   path?: string;

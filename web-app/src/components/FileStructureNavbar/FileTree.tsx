@@ -8,6 +8,8 @@ export const FileTree = ({
   path = "",
   depth = 0,
 }: FileTreeProps) => {
+  if (!structure) return;
+
   return Object.entries(structure).map(([key, value]) => {
     const fullPath = path ? `${path}/${key}` : key;
     const isFolder = value !== null;
