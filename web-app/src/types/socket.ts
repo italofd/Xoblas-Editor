@@ -18,6 +18,7 @@ export interface WsCommandMessage extends BaseMessage {
   cwd: string;
   output: string;
   raw_mode: boolean;
+  is_complete: boolean;
 }
 
 export interface WsFileMessage extends BaseMessage {

@@ -70,10 +70,9 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
                     )
 
                 else:
-                    # Write command to shell
-                    result = await editor.execute(command)
-
-                    await websocket.send_json(result)
+                    # Stream command execution
+                    async for result in editor.execute_streaming(command):
+                        await websocket.send_json(result)
 
             # To save a file
             elif req_type == "write_file":

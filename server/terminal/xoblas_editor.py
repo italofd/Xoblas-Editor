@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, AsyncGenerator
 from terminal.docker_manager import DockerManager
 from terminal.pty_controller import PtyController
 from terminal.file_manager import FileManager
@@ -68,7 +68,7 @@ class XoblasEditor:
             # We can return here and skip a ot of unnecessary calc we are doing
             # In that way making the raw input take longer to process without a real need
         else:
-            output = await self.pty.read_until_prompt()
+            output = await self.pty.read_until_prompt_or_partial()
 
         # Parse prompt info
         prompt_info = self.pty.parse_prompt_info(output)
@@ -116,6 +116,96 @@ class XoblasEditor:
             "raw_mode": is_raw_mode,
             "is_exiting_raw": is_exiting_raw,
         }
+
+    async def execute_streaming(
+        self, command: str
+    ) -> AsyncGenerator[Dict[str, str], None]:
+        """Execute a command and stream output chunks as they arrive."""
+        await self.pty.write(
+            command if self.pty.in_alternate_screen else command + "\n"
+        )
+
+        if self.pty.in_alternate_screen:
+            output = await self.pty.read_immediate_output()
+            yield self._build_result(
+                output, "", "", "", self.pty.in_alternate_screen, True, False
+            )
+            return
+
+        complete_output = ""
+
+        async for chunk in self.pty.read_continuous_until_prompt():
+            complete_output += chunk
+
+        # Clean the complete output and send it once
+        cleaned_output = self._clean_command_output(complete_output, command)
+
+        if cleaned_output.strip():
+            yield self._build_result(cleaned_output, "", "", "", False, False, False)
+
+        # Final message with prompt info
+        prompt_info = self.pty.parse_prompt_info(complete_output)
+        cwd = prompt_info.get("cwd", "")
+        self.config.CURRENT_WORKDIR = cwd
+
+        previously_in_raw = self.pty.in_alternate_screen
+        is_raw_mode = self.pty.check_alternate_screen(complete_output)
+        is_exiting_raw = previously_in_raw and not is_raw_mode
+
+        yield self._build_result(
+            "",
+            cwd,
+            prompt_info.get("user", ""),
+            prompt_info.get("host", ""),
+            is_raw_mode,
+            True,
+            is_exiting_raw,
+        )
+
+    def _build_result(
+        self,
+        output: str,
+        cwd: str,
+        user: str,
+        host: str,
+        raw_mode: bool,
+        is_complete: bool,
+        is_exiting_raw: bool,
+    ) -> Dict[str, str]:
+        """Build standardized result dictionary."""
+        return {
+            "type": "command",
+            "output": output,
+            "cwd": cwd,
+            "user": user,
+            "host": host,
+            "raw_mode": raw_mode,
+            "is_complete": is_complete,
+            "is_exiting_raw": is_exiting_raw,
+        }
+
+    def _clean_command_output(self, output: str, command: str) -> str:
+        """Extract and clean the command output from the raw PTY output."""
+        prompt_pattern = (
+            re.escape(self.config.PROMPT_PREFIX)
+            + r".+?"
+            + re.escape(self.config.PROMPT_SUFFIX)
+        )
+        match = re.search(prompt_pattern, output)
+
+        if match:
+            prompt_start = match.start()
+            output_before_prompt = output[:prompt_start]
+        else:
+            output_before_prompt = output
+
+        # Remove echoed command
+        if output_before_prompt.strip().startswith(command.strip()):
+            output_before_prompt = output_before_prompt.strip()[
+                len(command.strip()) :
+            ].lstrip()
+
+        return output_before_prompt.strip()
 
     # Very poor solution, we actually dont want to have to strip out characters since that can break unexpectedly
     # The ideal solution is to stop using PTY inside the main python code and just invoke the pty inside of the container

@@ -11,6 +11,7 @@ import asyncio
 import tty
 from typing import Dict, Tuple
 
+
 from terminal.terminal_config import TerminalConfig
 
 
@@ -84,6 +85,71 @@ class PtyController:
             await asyncio.sleep(0.05)
 
         return output
+
+    async def read_until_prompt_or_partial(
+        self, initial_timeout: float = 2.0, continuation_timeout: float = 0.5
+    ) -> str:
+        """Read until prompt appears, or return partial output if process is still running."""
+        output = ""
+        end_time = asyncio.get_event_loop().time() + initial_timeout
+        last_activity_time = asyncio.get_event_loop().time()
+
+        while asyncio.get_event_loop().time() < end_time:
+            r, _, _ = select.select([self.fd], [], [], 0.1)
+
+            if r:
+                chunk = os.read(self.fd, 4096).decode(errors="replace")
+                output += chunk
+                last_activity_time = asyncio.get_event_loop().time()
+
+                # If we see the prompt, we're done
+                if self.config.PROMPT_SUFFIX in chunk:
+                    return output
+
+            # If no activity for continuation_timeout, likely a long-running process
+            elif (
+                asyncio.get_event_loop().time() - last_activity_time
+            ) > continuation_timeout:
+                break
+
+            await asyncio.sleep(0.05)
+
+        return output
+
+    from typing import AsyncGenerator
+
+    async def read_continuous_until_prompt(
+        self, timeout: float = 30.0
+    ) -> AsyncGenerator[str, None]:
+        """Continuously read from PTY and yield chunks until prompt appears or alternate screen is entered."""
+        output_buffer = ""
+        end_time = asyncio.get_event_loop().time() + timeout
+
+        while asyncio.get_event_loop().time() < end_time:
+            r, _, _ = select.select([self.fd], [], [], 0.1)
+
+            if r:
+                try:
+                    chunk = os.read(self.fd, 4096).decode(errors="replace")
+                    output_buffer += chunk
+                    yield chunk
+
+                    # Check if we've entered alternate screen mode
+                    if "\x1b[?1049h" in chunk:
+                        self.in_alternate_screen = True
+                        break
+
+                    # Check if we've received the complete prompt (only if not in alternate screen)
+                    if (
+                        not self.in_alternate_screen
+                        and self.config.PROMPT_SUFFIX in chunk
+                    ):
+                        break
+
+                except (OSError, BlockingIOError):
+                    continue
+
+            await asyncio.sleep(0.05)
 
     # This value must be tested to determine a good approach when deploying as well =')
     async def read_immediate_output(self, timeout: float = 0.03) -> str:

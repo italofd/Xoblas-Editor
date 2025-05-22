@@ -74,20 +74,23 @@ export const onWsData = (
 ) => {
   if (!wsData || !terminal) return;
 
-  // Write command output
+  // Handle raw mode
   if (isRawMode) {
     terminal.write(wsData.output);
-
-    //If we are in raw mode we don`t want to writing the prompt
     return;
-  } else {
-    terminal.writeln(wsData.output);
   }
 
-  // Get terminal width
-  const dimensions = terminal.cols;
+  // For streaming chunks (incomplete), just write the output
+  if (wsData.is_complete === false) {
+    terminal.write(wsData.output);
+    return;
+  }
 
-  // Generate prompt and update promptLengthRef
+  // For complete commands, write output and show new prompt
+  terminal.write(wsData.output);
+
+  // Get terminal width and generate prompt
+  const dimensions = terminal.cols;
   const prompt = createPrompt(dimensions, wsData, promptLengthRef);
 
   // Reset line buffer after command completes
