@@ -128,7 +128,7 @@ class XoblasEditor:
         if self.pty.in_alternate_screen:
             output = await self.pty.read_immediate_output()
             yield self._build_result(
-                output, "", "", "", self.pty.in_alternate_screen, True, False
+                output, "", "", "", self.pty.in_alternate_screen, False, False
             )
             return
 
@@ -137,13 +137,16 @@ class XoblasEditor:
         async for chunk in self.pty.read_continuous_until_prompt():
             complete_output += chunk
 
-        # Clean the complete output and send it once
-        cleaned_output = self._clean_command_output(complete_output, command)
+            # Filter out prompt patterns and command echo from this chunk
+            filtered_chunk = self._filter_chunk(chunk, command)
 
-        if cleaned_output.strip():
-            yield self._build_result(cleaned_output, "", "", "", False, False, False)
+            # Send filtered chunk immediately if it has content
+            if filtered_chunk.strip():
+                yield self._build_result(
+                    filtered_chunk, "", "", "", False, False, False
+                )
 
-        # Final message with prompt info
+        # Final message with prompt info after command completes
         prompt_info = self.pty.parse_prompt_info(complete_output)
         cwd = prompt_info.get("cwd", "")
         self.config.CURRENT_WORKDIR = cwd
@@ -161,6 +164,27 @@ class XoblasEditor:
             True,
             is_exiting_raw,
         )
+
+    def _filter_chunk(self, chunk: str, command: str) -> str:
+        """Filter out prompt patterns and command echo from a chunk."""
+        # Remove prompt patterns
+        prompt_pattern = (
+            re.escape(self.config.PROMPT_PREFIX)
+            + r".+?"
+            + re.escape(self.config.PROMPT_SUFFIX)
+        )
+        chunk = re.sub(prompt_pattern, "", chunk)
+
+        # Remove command echo (exact command match)
+        if command.strip() in chunk:
+            chunk = chunk.replace(
+                command.strip(), "", 1
+            )  # Remove only first occurrence
+
+        # Clean up extra newlines that might be left
+        chunk = re.sub(r"\n\s*\n", "\n", chunk)
+
+        return chunk
 
     def _build_result(
         self,

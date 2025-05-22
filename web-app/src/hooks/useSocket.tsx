@@ -57,10 +57,8 @@ export const useSocket = () => {
 
         if (isFileMessage(parsedJson)) setFileData(parsedJson);
 
-        if (isXoblasMessage(parsedJson)) {
-          console.log("EVA04", parsedJson);
+        if (isXoblasMessage(parsedJson))
           setFileStructure(convertTreeCommandToFileStructure(parsedJson.file_structure));
-        }
       }
     });
 
