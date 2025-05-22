@@ -26,9 +26,6 @@ WORKDIR /home/termuser
 COPY ./scripts/xoblas.sh /usr/local/bin/xoblas
 RUN chmod +x /usr/local/bin/xoblas
 
-# Copy and append bashrc additions
-COPY ./scripts/bashrc_addition.sh /tmp/
-RUN cat /tmp/bashrc_addition.sh >> /home/termuser/.bashrc && rm /tmp/bashrc_addition.sh
 
 # Create file that will hold code editor text (python code)
 RUN mkdir root

@@ -3,6 +3,8 @@ from terminal.docker_manager import DockerManager
 from terminal.pty_controller import PtyController
 from terminal.file_manager import FileManager
 from terminal.terminal_config import TerminalConfig
+import json
+
 
 import re
 
@@ -29,9 +31,7 @@ class XoblasEditor:
         self.pty = PtyController(self.config)
         self.file_manager = None  # Will be initialized after container starts
 
-        # This can be changed trough the "xoblas" keyword
-        self.editor_wd = "/home/termuser/root/"
-
+        # NOT BEING USED
         self.last_output = ""
 
     async def start(self) -> None:
@@ -117,16 +117,28 @@ class XoblasEditor:
             "is_exiting_raw": is_exiting_raw,
         }
 
+    # Very poor solution, we actually dont want to have to strip out characters since that can break unexpectedly
+    # The ideal solution is to stop using PTY inside the main python code and just invoke the pty inside of the container
     async def xoblas_editor_command(self, command: str):
-        # Execute xoblas command in the docker linux env
-        stdout, stderr = await self.docker.exec_command(command)
+        result = await self.execute(f"NO_COLOR=1 TERM=dumb {command}")
 
-        if stderr:
-            raise Exception(f"Error getting file structure: {stderr.decode()}")
+        output = result.get("output")
 
-        print(stdout)
+        clean_pattern = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])|\r|\n")
 
-        return stdout.decode()
+        cleaned = clean_pattern.sub("", output)
+
+        return json.loads(cleaned)
+
+    def is_xoblas_command(self, command: str) -> bool:
+        # Strip leading whitespace and split by whitespace
+        words = command.strip().split()
+
+        # Check if there are words and if the first one is "xoblas"
+        if words and words[0].lower() == "xoblas":
+            return True
+        else:
+            return False
 
     async def resize(self, rows: int, cols: int) -> None:
         """Resize the terminal."""
@@ -156,16 +168,6 @@ class XoblasEditor:
     ) -> str:
         """Read content from a file in the container."""
         return await self.file_manager.read_file(file_path)
-
-    def is_xoblas_command(self, command: str) -> bool:
-        # Strip leading whitespace and split by whitespace
-        words = command.strip().split()
-
-        # Check if there are words and if the first one is "xoblas"
-        if words and words[0].lower() == "xoblas":
-            return True
-        else:
-            return False
 
     # Helper function to debug raw mode
     def log_terminal_input(self, input_str: str):

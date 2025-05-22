@@ -9,11 +9,20 @@ else
   path="$1"
 fi
 
-# Change to the specified directory
-if ! cd "$path" 2>/dev/null; then
-  echo "Error: Could not change to directory: $path"
-  exit 1
-fi
+# Resolve to absolute path
+abs_path=$(realpath "$path")
 
-# Run tree command with JSON output in the current directory
-tree -i -J --noreport .
+# Get directory name
+dir_name=$(basename "$abs_path")
+
+# Save current directory
+current_dir=$(pwd)
+
+# Go to parent directory of the target
+cd "$(dirname "$abs_path")"
+
+# Run tree on the directory name itself, this way the root node will be the directory name
+tree -l -i -J --noreport "$dir_name"
+
+# Return to original directory
+cd "$current_dir"

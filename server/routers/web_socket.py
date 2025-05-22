@@ -62,20 +62,18 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
             if req_type == "command":
                 command = json_data.get("command")
 
-                # If we are running a xoblas main command avoid doing at the terminal (shell) level
                 if editor.is_xoblas_command(command):
                     file_structure = await editor.xoblas_editor_command(command)
 
                     await websocket.send_json(
-                        {"type": "xoblas", "file_structure": json.loads(file_structure)}
+                        {"type": "xoblas", "file_structure": file_structure}
                     )
 
-                    return
+                else:
+                    # Write command to shell
+                    result = await editor.execute(command)
 
-                # Write command to shell
-                result = await editor.execute(command)
-
-                await websocket.send_json(result)
+                    await websocket.send_json(result)
 
             # To save a file
             elif req_type == "write_file":
@@ -86,6 +84,7 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
                 result = await editor.execute(json_data.get("data"))
 
                 # [TO-DO]: Make this object trough a function instead of repeating code
+                # When exiting a alternate screen we always check the file that is opened
                 if result.get("is_exiting_raw"):
                     file = await editor.read_from_file()
                     await websocket.send_json(
@@ -104,9 +103,9 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
                     result = await editor.resize(rows, cols)
 
                     await websocket.send_json(result)
-                    return
 
-                await editor.resize(rows, cols)
+                else:
+                    await editor.resize(rows, cols)
 
     except Exception as e:
         print(f"Terminal error: {e}")

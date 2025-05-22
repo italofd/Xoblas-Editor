@@ -53,15 +53,13 @@ class PtyController:
         await self.write("stty sane\n")  # Reset to sane defaults
         await self.write("stty -icanon -echo\n")  # Enable raw input mode
         await self.write("stty opost onlcr\n")  # Enable output processing
-        # Ensure proper translations
-        await self.write('bind "\\e[C": forward-char\n')  # Normal mode right arrow
-        await self.write('bind "\\eOC": forward-char\n')  # Application mode right arrow
 
         await self.write("reset\n")
         await self.write("\x1b[H\x1b[2J")
 
         await self.resize(self.rows, self.cols)
 
+    # [TODO] This should be avoiding writing it down at the os level
     async def write(self, data: str) -> None:
         """Write raw data to the PTY."""
         # [TO-DO]: We should use is_process_alive for that
@@ -134,15 +132,12 @@ class PtyController:
                     # Send SIGWINCH to notify the shell
                     os.kill(self.pid, signal.SIGWINCH)
 
-                    # Tell shell to update its idea of rows/cols
-                    await self.write(f"stty columns {cols} rows {rows}\n")
-
                     if capture_output:
                         # Small wait to let shell react
                         await asyncio.sleep(0.05)
 
                         # Read available output after resize
-                        output = await self.read_immediate_output(timeout=0.3)
+                        output = await self.read_immediate_output(timeout=0.1)
                         return output
                     else:
                         # If not capturing output, just wait a bit for safety
@@ -191,11 +186,6 @@ class PtyController:
 
             return False
         return self.in_alternate_screen
-
-    def is_exiting_alternate_screen(self, data: str) -> bool:
-        if "\x1b[?1049l" in data:
-            return True
-        return False
 
     def close(self) -> None:
         """Close the PTY."""
