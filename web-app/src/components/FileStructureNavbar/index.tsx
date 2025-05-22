@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 import { FileTree } from "./FileTree";
 import { FileStructure } from "@/types/terminal";
+import "./scrollbar.css";
 
 export default function FileStructureNavbar({ structure }: { structure: FileStructure }) {
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
@@ -56,7 +57,7 @@ export default function FileStructureNavbar({ structure }: { structure: FileStru
   return (
     <div
       ref={sidebarRef}
-      className="h-full bg-gray-900 text-white p-2 overflow-y-auto border-r border-gray-700 flex-shrink-0 relative"
+      className="h-full bg-gray-900 text-white p-2 overflow-y-auto border-r border-gray-700 flex-shrink-0 relative file-explorer-scrollbar"
       style={{ width: `${width}px` }}
     >
       <div className="flex justify-between items-center mb-4 px-2">
