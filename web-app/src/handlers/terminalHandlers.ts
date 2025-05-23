@@ -78,15 +78,7 @@ export const onWsData = (
     return;
   }
 
-  // Get terminal width and generate prompt
-  const dimensions = terminal.cols;
-  const prompt = createPrompt(dimensions, wsData, promptLengthRef);
-
-  // Reset line buffer after command completes
-  currentLineRef.current = " ";
-
-  // Write new line and new prompt, finally save cursor position
-  terminal.write(`\n${prompt}${ANSI.SAVE_CURSOR}`);
+  resetTerminal(wsData, terminal, promptLengthRef, currentLineRef);
 };
 
 export const resetTerminal = (
@@ -107,7 +99,7 @@ export const resetTerminal = (
   currentLineRef.current = " ";
 
   // Write new prompt and save cursor position
-  terminal.write(`${prompt}${ANSI.SAVE_CURSOR}`);
+  terminal.write(`\n${prompt}${ANSI.SAVE_CURSOR}`);
 };
 
 export const handleTerminalKeyEvent =
