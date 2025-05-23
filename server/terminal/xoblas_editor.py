@@ -31,9 +31,6 @@ class XoblasEditor:
         self.pty = PtyController(self.config)
         self.file_manager = None  # Will be initialized after container starts
 
-        # NOT BEING USED
-        self.last_output = ""
-
     async def start(self) -> None:
         """Start the PTY shell session in a Docker container."""
         # Build the Docker image
@@ -52,9 +49,6 @@ class XoblasEditor:
         await self.pty.create_pty(container_id)
         await self.pty.configure_terminal()
 
-        # Read initial output
-        self.last_output = await self.pty.read_until_prompt()
-
     async def execute(self, command: str) -> Dict[str, str]:
         """Execute a command in the shell"""
 
@@ -68,7 +62,7 @@ class XoblasEditor:
             # We can return here and skip a ot of unnecessary calc we are doing
             # In that way making the raw input take longer to process without a real need
         else:
-            output = await self.pty.read_until_prompt_or_partial()
+            output = await self.pty.read_until_prompt()
 
         # Parse prompt info
         prompt_info = self.pty.parse_prompt_info(output)

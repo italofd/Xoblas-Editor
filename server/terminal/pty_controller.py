@@ -9,7 +9,7 @@ import struct
 import re
 import asyncio
 import tty
-from typing import Dict, Tuple
+from typing import Dict, AsyncGenerator
 
 
 from terminal.terminal_config import TerminalConfig
@@ -86,38 +86,6 @@ class PtyController:
 
         return output
 
-    async def read_until_prompt_or_partial(
-        self, initial_timeout: float = 2.0, continuation_timeout: float = 0.5
-    ) -> str:
-        """Read until prompt appears, or return partial output if process is still running."""
-        output = ""
-        end_time = asyncio.get_event_loop().time() + initial_timeout
-        last_activity_time = asyncio.get_event_loop().time()
-
-        while asyncio.get_event_loop().time() < end_time:
-            r, _, _ = select.select([self.fd], [], [], 0.1)
-
-            if r:
-                chunk = os.read(self.fd, 4096).decode(errors="replace")
-                output += chunk
-                last_activity_time = asyncio.get_event_loop().time()
-
-                # If we see the prompt, we're done
-                if self.config.PROMPT_SUFFIX in chunk:
-                    return output
-
-            # If no activity for continuation_timeout, likely a long-running process
-            elif (
-                asyncio.get_event_loop().time() - last_activity_time
-            ) > continuation_timeout:
-                break
-
-            await asyncio.sleep(0.05)
-
-        return output
-
-    from typing import AsyncGenerator
-
     async def read_continuous_until_prompt(
         self, timeout: float = 120.0
     ) -> AsyncGenerator[str, None]:
@@ -158,13 +126,39 @@ class PtyController:
         end_time = asyncio.get_event_loop().time() + timeout
 
         while asyncio.get_event_loop().time() < end_time:
-            r, _, _ = select.select([self.fd], [], [], 0.04)
+            r, _, _ = select.select([self.fd], [], [], 0.03)
             if r:
                 chunk = os.read(self.fd, 4096).decode(errors="replace")
                 output += chunk
             await asyncio.sleep(0.01)
 
         return output
+
+    def parse_prompt_info(self, output: str) -> Dict[str, str]:
+        """Extract user and working directory from the prompt."""
+        match = re.search(
+            f"{self.config.PROMPT_PREFIX}(.+?){self.config.PROMPT_SUFFIX[:-1]}", output
+        )
+        if match:
+            prompt_content = match.group(1)
+            try:
+                user_host, cwd = prompt_content.split(":", 1)
+                user, host = user_host.split("@")
+                return {"user": user, "host": host, "cwd": cwd}
+            except ValueError:
+                return {}
+        return {}
+
+    def check_alternate_screen(self, data: str) -> bool:
+        """Check if alternate screen mode is entered or exited."""
+        if "\x1b[?1049h" in data:
+            self.in_alternate_screen = True
+            return True
+        elif "\x1b[?1049l" in data:
+            self.in_alternate_screen = False
+
+            return False
+        return self.in_alternate_screen
 
     async def resize(self, rows: int, cols: int, capture_output: bool = True) -> str:
         """Resize the terminal, optionally capturing any immediate response."""
@@ -209,32 +203,6 @@ class PtyController:
             return False
         except PermissionError:
             return True  # Process exists but we don't have permission
-
-    def parse_prompt_info(self, output: str) -> Dict[str, str]:
-        """Extract user and working directory from the prompt."""
-        match = re.search(
-            f"{self.config.PROMPT_PREFIX}(.+?){self.config.PROMPT_SUFFIX[:-1]}", output
-        )
-        if match:
-            prompt_content = match.group(1)
-            try:
-                user_host, cwd = prompt_content.split(":", 1)
-                user, host = user_host.split("@")
-                return {"user": user, "host": host, "cwd": cwd}
-            except ValueError:
-                return {}
-        return {}
-
-    def check_alternate_screen(self, data: str) -> bool:
-        """Check if alternate screen mode is entered or exited."""
-        if "\x1b[?1049h" in data:
-            self.in_alternate_screen = True
-            return True
-        elif "\x1b[?1049l" in data:
-            self.in_alternate_screen = False
-
-            return False
-        return self.in_alternate_screen
 
     def close(self) -> None:
         """Close the PTY."""
