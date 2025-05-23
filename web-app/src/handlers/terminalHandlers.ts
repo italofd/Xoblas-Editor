@@ -56,9 +56,6 @@ const updateLine = (terminal: Terminal, currentLine: string, relativePos: number
 };
 
 const handleCommand = (command: string, terminal: Terminal | null, handlers: Handlers) => {
-  //[TO-DO]: Treat case where its not connected by displaying a error or trying a reconnection
-  console.log("EVA04 INSIDE HANDLE", command);
-
   const res = handlers.sendEvent({ type: "command", data: { command } });
 
   //[TO-DO]: Receive response and display, implement path for working directory
@@ -76,7 +73,7 @@ export const onWsData = (
 
   terminal.write(wsData.output);
 
-  // Dont write anything for this scenarios besides the output
+  // Dont write anything in the terminal for this scenarios besides the output
   if (isRawMode || wsData.is_complete === false) {
     return;
   }
@@ -88,8 +85,8 @@ export const onWsData = (
   // Reset line buffer after command completes
   currentLineRef.current = " ";
 
-  // Write new prompt and save cursor position
-  terminal.write(`${prompt}${ANSI.SAVE_CURSOR}`);
+  // Write new line and new prompt, finally save cursor position
+  terminal.write(`\n${prompt}${ANSI.SAVE_CURSOR}`);
 };
 
 export const resetTerminal = (
@@ -164,7 +161,6 @@ export const handleTerminalKeyEvent =
 
     switch (eventKey) {
       case "Enter":
-        terminal.writeln("");
         handleCommand(currentLineRef.current, terminal, handlers);
         currentLineRef.current = " ";
         break;
