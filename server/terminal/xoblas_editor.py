@@ -49,9 +49,9 @@ class XoblasEditor:
         await self.pty.create_pty(container_id)
         await self.pty.configure_terminal()
 
-    # Only used for alternate screen mode
+    # Only used for alternate screen mode, fast and horrible
     async def execute(self, command: str) -> Dict[str, str]:
-        """Execute a command in the shell"""
+        """Execute a command simple command in the shell, useful for alternate screen inputs"""
 
         await self.pty.write(command)
 
@@ -64,19 +64,19 @@ class XoblasEditor:
             prompt_info, output.strip()
         )
 
-        return {
-            "type": "command",
-            "output": (
+        return self._build_command_result(
+            (
                 output
                 if self.pty.in_alternate_screen
                 else self._filter_chunk(output.strip(), command)
             ),
-            "cwd": cwd,
-            "user": prompt_info.get("user", ""),
-            "host": prompt_info.get("host", ""),
-            "raw_mode": is_raw_mode,
-            "is_exiting_raw": is_exiting_raw,
-        }
+            cwd,
+            prompt_info.get("user", ""),
+            prompt_info.get("host", ""),
+            is_raw_mode,
+            not is_raw_mode,
+            is_exiting_raw,
+        )
 
     async def execute_streaming(
         self, command: str, complete_output: bool = False
@@ -104,7 +104,7 @@ class XoblasEditor:
 
                 # Send filtered chunk immediately if it has content
                 if filtered_chunk.strip():
-                    yield self._build_result(
+                    yield self._build_command_result(
                         filtered_chunk, "", "", "", False, False, False
                     )
 
@@ -121,7 +121,7 @@ class XoblasEditor:
             else ""
         )
 
-        yield self._build_result(
+        yield self._build_command_result(
             filtered_output.strip(),
             cwd,
             prompt_info.get("user", ""),
@@ -132,6 +132,7 @@ class XoblasEditor:
         )
 
     def _update_and_parse_variables(self, prompt_info, output):
+        """Parse, get and update utils variables"""
         cleaned_output = output.strip()
 
         cwd = prompt_info.get("cwd", "")
@@ -165,7 +166,8 @@ class XoblasEditor:
 
         return chunk
 
-    def _build_result(
+    # TODO Make it based on a structure
+    def _build_command_result(
         self,
         output: str,
         cwd: str,
