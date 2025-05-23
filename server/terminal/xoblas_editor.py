@@ -49,56 +49,28 @@ class XoblasEditor:
         await self.pty.create_pty(container_id)
         await self.pty.configure_terminal()
 
+    # Only used for alternate screen mode
     async def execute(self, command: str) -> Dict[str, str]:
         """Execute a command in the shell"""
 
-        await self.pty.write(
-            command if self.pty.in_alternate_screen else command + "\n"
-        )
+        await self.pty.write(command)
 
-        if self.pty.in_alternate_screen:
-            output = await self.pty.read_immediate_output()
+        output = await self.pty.read_immediate_output()
 
         # Parse prompt info
         prompt_info = self.pty.parse_prompt_info(output)
 
-        # Find the prompt inside the output (even if glued)
-        prompt_pattern = (
-            re.escape(self.config.PROMPT_PREFIX)
-            + r".+?"
-            + re.escape(self.config.PROMPT_SUFFIX)
+        cwd, is_exiting_raw, is_raw_mode = self._update_and_parse_variables(
+            prompt_info, output.strip()
         )
-        match = re.search(prompt_pattern, output)
-
-        if match:
-            prompt_start = match.start()
-            output_before_prompt = output[:prompt_start]
-        else:
-            # Fallback, no prompt found
-            output_before_prompt = output
-
-        # Remove echoed command
-        if output_before_prompt.strip().startswith(command.strip()):
-            output_before_prompt = output_before_prompt.strip()[
-                len(command.strip()) :
-            ].lstrip()
-
-        cleaned_output = output_before_prompt.strip()
-
-        cwd = prompt_info.get("cwd", "")
-
-        self.config.CURRENT_WORKDIR = cwd
-
-        # Grab the value before check alternate screen
-        previously_in_raw = self.pty.in_alternate_screen
-
-        is_raw_mode = self.pty.check_alternate_screen(cleaned_output)
-
-        is_exiting_raw = previously_in_raw and not is_raw_mode
 
         return {
             "type": "command",
-            "output": output if self.pty.in_alternate_screen else cleaned_output,
+            "output": (
+                output
+                if self.pty.in_alternate_screen
+                else self._filter_chunk(output.strip(), command)
+            ),
             "cwd": cwd,
             "user": prompt_info.get("user", ""),
             "host": prompt_info.get("host", ""),
@@ -138,12 +110,9 @@ class XoblasEditor:
 
         # Parse prompt info and build final result
         prompt_info = self.pty.parse_prompt_info(complete_output_buffer)
-        cwd = prompt_info.get("cwd", "")
-        self.config.CURRENT_WORKDIR = cwd
-
-        previously_in_raw = self.pty.in_alternate_screen
-        is_raw_mode = self.pty.check_alternate_screen(complete_output_buffer)
-        is_exiting_raw = previously_in_raw and not is_raw_mode
+        cwd, is_exiting_raw, is_raw_mode = self._update_and_parse_variables(
+            prompt_info, complete_output_buffer.strip()
+        )
 
         # Final result - complete output or empty for streaming mode
         filtered_output = (
@@ -161,6 +130,19 @@ class XoblasEditor:
             True,
             is_exiting_raw,
         )
+
+    def _update_and_parse_variables(self, prompt_info, output):
+        cleaned_output = output.strip()
+
+        cwd = prompt_info.get("cwd", "")
+        self.config.CURRENT_WORKDIR = cwd
+
+        # Grab the value before check alternate screen
+        previously_in_raw = self.pty.in_alternate_screen
+        is_raw_mode = self.pty.check_alternate_screen(cleaned_output)
+        is_exiting_raw = previously_in_raw and not is_raw_mode
+
+        return cwd, is_exiting_raw, is_raw_mode
 
     def _filter_chunk(self, chunk: str, command: str) -> str:
         """Filter out prompt patterns and command echo from a chunk."""
