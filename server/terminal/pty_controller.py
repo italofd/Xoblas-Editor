@@ -166,23 +166,6 @@ class PtyController:
 
         return output
 
-    async def get_terminal_dimensions(self) -> Tuple[int, int]:
-        """Get the current terminal width (columns) and height (rows)."""
-        # [TO-DO]: We should use is_process_alive for that
-        if self.fd is None:
-            return self.cols, self.rows  # Fallback to defaults if no pty
-
-        try:
-            # Use TIOCGWINSZ to get window size
-            winsize = fcntl.ioctl(
-                self.fd, termios.TIOCGWINSZ, struct.pack("HHHH", 0, 0, 0, 0)
-            )
-            rows, cols, _, _ = struct.unpack("HHHH", winsize)
-            return cols, rows
-        except (OSError, IOError) as e:
-            print(f"Error getting terminal dimensions: {e}")
-            return self.cols, self.rows  # Fallback to stored values
-
     async def resize(self, rows: int, cols: int, capture_output: bool = True) -> str:
         """Resize the terminal, optionally capturing any immediate response."""
         if self.fd is not None:

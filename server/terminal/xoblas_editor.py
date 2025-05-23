@@ -208,29 +208,6 @@ class XoblasEditor:
             "is_exiting_raw": is_exiting_raw,
         }
 
-    def _clean_command_output(self, output: str, command: str) -> str:
-        """Extract and clean the command output from the raw PTY output."""
-        prompt_pattern = (
-            re.escape(self.config.PROMPT_PREFIX)
-            + r".+?"
-            + re.escape(self.config.PROMPT_SUFFIX)
-        )
-        match = re.search(prompt_pattern, output)
-
-        if match:
-            prompt_start = match.start()
-            output_before_prompt = output[:prompt_start]
-        else:
-            output_before_prompt = output
-
-        # Remove echoed command
-        if output_before_prompt.strip().startswith(command.strip()):
-            output_before_prompt = output_before_prompt.strip()[
-                len(command.strip()) :
-            ].lstrip()
-
-        return output_before_prompt.strip()
-
     # Very poor solution, we actually dont want to have to strip out characters since that can break unexpectedly
     # The ideal solution is to stop using PTY inside the main python code and just invoke the pty inside of the container
     async def xoblas_editor_command(self, command: str):
@@ -282,20 +259,6 @@ class XoblasEditor:
     ) -> str:
         """Read content from a file in the container."""
         return await self.file_manager.read_file(file_path)
-
-    # Helper function to debug raw mode
-    def log_terminal_input(self, input_str: str):
-        escaped = ""
-        for char in input_str:
-            if ord(char) < 32 or ord(char) == 127:
-                escaped += f"\\x{ord(char):02x}"
-            else:
-                escaped += char
-        print(f"Terminal input: {escaped}")
-
-    def is_alive(self) -> bool:
-        """Check if the shell is still alive."""
-        return self.pty.is_process_alive() and self.docker.is_container_running()
 
     async def close(self) -> None:
         """Close the PTY shell session and clean up Docker resources."""
