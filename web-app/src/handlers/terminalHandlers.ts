@@ -13,6 +13,27 @@ const ANSI = {
   MOVE_LEFT: (n: number) => `\x1b[${n}D`,
 };
 
+// Helper function to find word boundaries
+const findWordBoundary = (text: string, pos: number, direction: "left" | "right"): number => {
+  if (direction === "left") {
+    // Move left to find start of current or previous word
+    let i = Math.max(0, pos - 1);
+    // Skip whitespace
+    while (i > 0 && /\s/.test(text[i])) i--;
+    // Skip non-whitespace (word characters)
+    while (i > 0 && !/\s/.test(text[i])) i--;
+    return Math.max(0, i === 0 ? 0 : i + 1);
+  } else {
+    // Move right to find end of current or next word
+    let i = pos;
+    // Skip current word
+    while (i < text.length && !/\s/.test(text[i])) i++;
+    // Skip whitespace
+    while (i < text.length && /\s/.test(text[i])) i++;
+    return i;
+  }
+};
+
 // Function to create an appropriately sized prompt based on terminal width
 const createPrompt = (cols: number, wsData: WsData, promptLengthRef: PromptRef) => {
   if (!wsData) return "$ ";
@@ -133,8 +154,11 @@ export const handleTerminalKeyEvent =
           const tail = currentLineRef.current.slice(relativePos);
           terminal.write(tail);
 
-          const movesLeft = tail.length - 1;
-          if (movesLeft > 0) terminal.write(ANSI.MOVE_LEFT(movesLeft));
+          // Move cursor to end of pasted text
+          const remainingAfterPaste = currentLineRef.current.slice(relativePos + text.length);
+          if (remainingAfterPaste.length > 0) {
+            terminal.write(ANSI.MOVE_LEFT(remainingAfterPaste.length));
+          }
         }
       } catch (err) {
         console.error("Paste failed:", err);
@@ -159,6 +183,7 @@ export const handleTerminalKeyEvent =
 
       case "Backspace":
         if (cursorX > promptLengthRef.current) {
+          // Regular backspace
           currentLineRef.current =
             currentLineRef.current.slice(0, relativePos - 1) +
             currentLineRef.current.slice(relativePos);
@@ -178,21 +203,41 @@ export const handleTerminalKeyEvent =
         }
         break;
 
-      case "ArrowUp":
-      case "ArrowDown":
-        // [TO-DO]: Implement History =)
-        break;
-
       case "ArrowLeft":
-        if (cursorX > promptLengthRef.current) {
+        if (domEvent.ctrlKey || domEvent.metaKey) {
+          // Ctrl+Left: Move to start of previous word
+          if (cursorX > promptLengthRef.current) {
+            const wordStart = findWordBoundary(currentLineRef.current, relativePos, "left");
+            const movesLeft = relativePos - wordStart;
+            if (movesLeft > 0) terminal.write(ANSI.MOVE_LEFT(movesLeft));
+          }
+        } else if (cursorX > promptLengthRef.current) {
+          // Regular left arrow
           terminal.write(ANSI.CURSOR_LEFT);
         }
         break;
 
       case "ArrowRight":
-        if (cursorX < promptLengthRef.current + currentLineRef.current.length) {
+        if (domEvent.ctrlKey || domEvent.metaKey) {
+          // Ctrl+Right: Move to start of next word
+          if (cursorX < promptLengthRef.current + currentLineRef.current.length) {
+            const wordEnd = findWordBoundary(currentLineRef.current, relativePos, "right");
+            const movesRight = wordEnd - relativePos;
+            if (movesRight > 0) {
+              for (let i = 0; i < movesRight; i++) {
+                terminal.write(ANSI.CURSOR_RIGHT);
+              }
+            }
+          }
+        } else if (cursorX < promptLengthRef.current + currentLineRef.current.length) {
+          // Regular right arrow
           terminal.write(ANSI.CURSOR_RIGHT);
         }
+        break;
+
+      case "ArrowUp":
+      case "ArrowDown":
+        // [TO-DO]: Implement History =)
         break;
 
       case "End":
