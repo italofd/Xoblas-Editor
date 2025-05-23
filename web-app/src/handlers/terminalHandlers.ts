@@ -74,20 +74,12 @@ export const onWsData = (
 ) => {
   if (!wsData || !terminal) return;
 
-  // Handle raw mode
-  if (isRawMode) {
-    terminal.write(wsData.output);
-    return;
-  }
-
-  // For streaming chunks (incomplete), just write the output
-  if (wsData.is_complete === false) {
-    terminal.write(wsData.output);
-    return;
-  }
-
-  // For complete commands, write output and show new prompt
   terminal.write(wsData.output);
+
+  // Dont write anything for this scenarios besides the output
+  if (isRawMode || wsData.is_complete === false) {
+    return;
+  }
 
   // Get terminal width and generate prompt
   const dimensions = terminal.cols;

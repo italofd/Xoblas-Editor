@@ -103,8 +103,7 @@ class PtyController:
                     yield chunk
 
                     # Check if we've entered alternate screen mode
-                    if "\x1b[?1049h" in chunk:
-                        self.in_alternate_screen = True
+                    if self.check_alternate_screen(chunk):
                         break
 
                     # Check if we've received the complete prompt (only if not in alternate screen)
