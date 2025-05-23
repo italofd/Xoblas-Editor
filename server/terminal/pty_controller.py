@@ -47,7 +47,7 @@ class PtyController:
 
     async def configure_terminal(self) -> None:
         """Configure terminal settings."""
-        prompt_template = f'export PS1="{self.config.PROMPT_PREFIX}\\u@\\h:\\w{self.config.PROMPT_SUFFIX} "\n'
+        prompt_template = f'export PS1="{self.config.PROMPT_PREFIX}\\u@\\h:\\w{self.config.PROMPT_SUFFIX}"\n'
         await self.write(prompt_template)
         await self.write("export TERM=xterm-256color\n")
 
@@ -119,14 +119,14 @@ class PtyController:
     from typing import AsyncGenerator
 
     async def read_continuous_until_prompt(
-        self, timeout: float = 30.0
+        self, timeout: float = 120.0
     ) -> AsyncGenerator[str, None]:
         """Continuously read from PTY and yield chunks until prompt appears or alternate screen is entered."""
         output_buffer = ""
         end_time = asyncio.get_event_loop().time() + timeout
 
         while asyncio.get_event_loop().time() < end_time:
-            r, _, _ = select.select([self.fd], [], [], 0.1)
+            r, _, _ = select.select([self.fd], [], [], 0.05)
 
             if r:
                 try:
