@@ -59,11 +59,6 @@ class XoblasEditor:
         if self.pty.in_alternate_screen:
             output = await self.pty.read_immediate_output()
 
-            # We can return here and skip a ot of unnecessary calc we are doing
-            # In that way making the raw input take longer to process without a real need
-        else:
-            output = await self.pty.read_until_prompt()
-
         # Parse prompt info
         prompt_info = self.pty.parse_prompt_info(output)
 
@@ -112,45 +107,53 @@ class XoblasEditor:
         }
 
     async def execute_streaming(
-        self, command: str
+        self, command: str, complete_output: bool = False
     ) -> AsyncGenerator[Dict[str, str], None]:
-        """Execute a command and stream output chunks as they arrive."""
+        """Execute a command and stream output chunks as they arrive, or return complete output."""
         await self.pty.write(
             command if self.pty.in_alternate_screen else command + "\n"
         )
 
-        if self.pty.in_alternate_screen:
-            output = await self.pty.read_immediate_output()
-            yield self._build_result(
-                output, "", "", "", self.pty.in_alternate_screen, False, False
-            )
-            return
+        # if self.pty.in_alternate_screen:
+        #     output = await self.pty.read_immediate_output()
+        #     yield self._build_result(
+        #         output, "", "", "", self.pty.in_alternate_screen, False, False
+        #     )
+        #     return
 
-        complete_output = ""
+        complete_output_buffer = ""
 
         async for chunk in self.pty.read_continuous_until_prompt():
-            complete_output += chunk
+            complete_output_buffer += chunk
 
-            # Filter out prompt patterns and command echo from this chunk
-            filtered_chunk = self._filter_chunk(chunk, command)
+            if not complete_output:
+                # Filter out prompt patterns and command echo from this chunk
+                filtered_chunk = self._filter_chunk(chunk, command)
 
-            # Send filtered chunk immediately if it has content
-            if filtered_chunk.strip():
-                yield self._build_result(
-                    filtered_chunk, "", "", "", False, False, False
-                )
+                # Send filtered chunk immediately if it has content
+                if filtered_chunk.strip():
+                    yield self._build_result(
+                        filtered_chunk, "", "", "", False, False, False
+                    )
 
-        # Final message with prompt info after command completes
-        prompt_info = self.pty.parse_prompt_info(complete_output)
+        # Parse prompt info and build final result
+        prompt_info = self.pty.parse_prompt_info(complete_output_buffer)
         cwd = prompt_info.get("cwd", "")
         self.config.CURRENT_WORKDIR = cwd
 
         previously_in_raw = self.pty.in_alternate_screen
-        is_raw_mode = self.pty.check_alternate_screen(complete_output)
+        is_raw_mode = self.pty.check_alternate_screen(complete_output_buffer)
         is_exiting_raw = previously_in_raw and not is_raw_mode
 
+        # Final result - complete output or empty for streaming mode
+        filtered_output = (
+            self._filter_chunk(complete_output_buffer, command)
+            if complete_output
+            else ""
+        )
+
         yield self._build_result(
-            "",
+            filtered_output.strip(),
             cwd,
             prompt_info.get("user", ""),
             prompt_info.get("host", ""),
@@ -205,7 +208,10 @@ class XoblasEditor:
     # Very poor solution, we actually dont want to have to strip out characters since that can break unexpectedly
     # The ideal solution is to stop using PTY inside the main python code and just invoke the pty inside of the container
     async def xoblas_editor_command(self, command: str):
-        result = await self.execute(f"NO_COLOR=1 TERM=dumb {command}")
+        async for result in self.execute_streaming(
+            f"NO_COLOR=1 TERM=dumb {command}", True
+        ):
+            break
 
         output = result.get("output")
 

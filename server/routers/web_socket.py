@@ -36,9 +36,8 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
         active_terminals[session_id] = editor
 
         # Send initial prompt (perhaps, it could be executed in the initialization)
-        initial_result = await editor.execute("")
-
-        await websocket.send_json(initial_result)
+        async for result in editor.execute_streaming(""):
+            await websocket.send_json(result)
 
         # Sync file stored on container with UI
         main_file = await editor.read_from_file()

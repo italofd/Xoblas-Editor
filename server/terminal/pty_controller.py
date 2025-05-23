@@ -67,25 +67,6 @@ class PtyController:
         if self.fd is not None:
             os.write(self.fd, data.encode())
 
-    async def read_until_prompt(self, timeout: float = 2.0) -> str:
-        """Read from the PTY until the prompt appears."""
-        output = ""
-        end_time = asyncio.get_event_loop().time() + timeout
-
-        while asyncio.get_event_loop().time() < end_time:
-            r, _, _ = select.select([self.fd], [], [], 0.1)
-
-            if r:
-                chunk = os.read(self.fd, 4096).decode(errors="replace")
-                output += chunk
-
-                if self.config.PROMPT_SUFFIX in chunk:
-                    break
-
-            await asyncio.sleep(0.05)
-
-        return output
-
     async def read_continuous_until_prompt(
         self, timeout: float = 120.0
     ) -> AsyncGenerator[str, None]:
@@ -152,11 +133,9 @@ class PtyController:
         """Check if alternate screen mode is entered or exited."""
         if "\x1b[?1049h" in data:
             self.in_alternate_screen = True
-            return True
         elif "\x1b[?1049l" in data:
             self.in_alternate_screen = False
 
-            return False
         return self.in_alternate_screen
 
     async def resize(self, rows: int, cols: int, capture_output: bool = True) -> str:
