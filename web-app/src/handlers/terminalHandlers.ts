@@ -203,6 +203,25 @@ export const handleTerminalKeyEvent =
         }
         break;
 
+      case "Home":
+        // Move cursor to beginning of line (after prompt)
+        if (cursorX > promptLengthRef.current) {
+          const movesLeft = cursorX - promptLengthRef.current;
+          terminal.write(ANSI.MOVE_LEFT(movesLeft));
+        }
+        break;
+
+      case "End":
+        // Move cursor to end of line
+        const endPos = promptLengthRef.current + currentLineRef.current.length;
+        if (cursorX < endPos) {
+          const movesRight = endPos - cursorX;
+          for (let i = 0; i < movesRight; i++) {
+            terminal.write(ANSI.CURSOR_RIGHT);
+          }
+        }
+        break;
+
       case "ArrowLeft":
         if (domEvent.ctrlKey || domEvent.metaKey) {
           // Ctrl+Left: Move to start of previous word
