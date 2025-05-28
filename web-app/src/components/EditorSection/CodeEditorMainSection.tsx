@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import { useSocket } from "@/hooks/useSocket";
 import LoadingOverlay from "../LoaderOverlay";
 import FileStructureNavbar from "../FileStructureNavbar";
+import * as monaco from "monaco-editor";
 
 const XTerminal = dynamic(() => import("../Terminal/index"), {
   ssr: false,
@@ -19,6 +20,7 @@ const XTerminal = dynamic(() => import("../Terminal/index"), {
 
 export const CodeEditorMainSection = () => {
   const editorRef = useRef<CodeEditorDTO>(null);
+  const monacoRef = useRef<typeof monaco>(null);
 
   const socketHook = useSocket();
 
@@ -51,6 +53,7 @@ export const CodeEditorMainSection = () => {
                 });
               }}
               editorRef={editorRef}
+              monacoRef={monacoRef}
             />
           </MainLayout>
         </div>

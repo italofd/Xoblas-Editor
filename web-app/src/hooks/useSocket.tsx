@@ -48,6 +48,8 @@ export const useSocket = () => {
       if (event.data) {
         const parsedJson = JSON.parse(event.data);
 
+        console.log("EVA01", parsedJson);
+
         if (!parsedJson) return;
 
         if (isCommandMessage(parsedJson)) {

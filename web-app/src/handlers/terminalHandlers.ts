@@ -259,8 +259,6 @@ export const handleTerminalKeyEvent =
         // [TO-DO]: Implement History =)
         break;
 
-      case "End":
-      case "Home":
       case "Insert":
         // [TO-DO]: Breaking events that need proper handling
         break;
