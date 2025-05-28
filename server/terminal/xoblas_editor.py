@@ -27,7 +27,7 @@ class XoblasEditor:
             self.config.DEFAULT_CONTAINER_NAME = container_name
 
         # Initialize components
-        self.docker = DockerManager(user_id, self.config)
+        self.docker = DockerManager.get_or_create(user_id, self.config)
         self.pty = PtyController(self.config)
         self.file_manager = None  # Will be initialized after container starts
 
@@ -202,6 +202,8 @@ class XoblasEditor:
         clean_pattern = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])|\r|\n")
 
         cleaned = clean_pattern.sub("", output)
+
+        print(cleaned)
 
         return json.loads(cleaned)
 

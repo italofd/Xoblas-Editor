@@ -11,9 +11,14 @@ RUN apt-get update && apt-get install -y \
     sudo \
     python3 \
     python3-pip \
+    python3-pylsp \
     procps \
     tree \
     && apt-get clean
+
+# Install LSP server via pip only
+RUN pip3 install --break-system-packages \
+    python-lsp-server[all]
 
 # Create a restricted user
 RUN useradd -m -s /bin/bash termuser
@@ -26,7 +31,6 @@ WORKDIR /home/termuser
 COPY ./scripts/xoblas.sh /usr/local/bin/xoblas
 RUN chmod +x /usr/local/bin/xoblas
 
-
 # Create file that will hold code editor text (python code)
 RUN mkdir root
 RUN touch root/main.py 
@@ -37,7 +41,6 @@ RUN echo '\necho "Welcome to your isolated terminal environment!"' >> /home/term
 # Set ownership
 RUN chown -R termuser:termuser /home/termuser
 
-# Switch to user
 USER termuser
 
 CMD ["/bin/bash"]
