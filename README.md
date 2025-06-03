@@ -1,6 +1,6 @@
-# Xoblas terminal
+# Xoblas Editor
 
-## How to Get Started
+## How to Get Started / Local Development 
 
 - We are considering, for all examples below, that you are in the main directory "xoblas-terminal"
 
