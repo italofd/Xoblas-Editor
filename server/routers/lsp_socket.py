@@ -35,8 +35,6 @@ async def ws_lsp(websocket: WebSocket, user_id: str):
             req_type = json_data.get("type")
             language = json_data.get("language")
 
-            print("EVA02", req_type, language)
-
             if not language:
                 await websocket.send_json(
                     {"type": "error", "message": "Language is required"}

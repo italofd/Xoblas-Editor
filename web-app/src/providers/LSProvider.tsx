@@ -18,10 +18,6 @@ export const MonacoLSPProvider = ({ editorRef, monacoRef, language }: MonacoLSPP
   const editor = editorRef.current;
   const monaco = monacoRef.current;
 
-  //   if (!editor || !monaco || !lsp.isConnected) return;
-
-  //   console.log("EVA02", editor, monaco);
-
   const convertLSPCompletionsToMonaco = (
     items: LSPCompletionItem[],
     model: monaco.editor.ITextModel,
@@ -51,7 +47,7 @@ export const MonacoLSPProvider = ({ editorRef, monacoRef, language }: MonacoLSPP
     // LSP CompletionItemKind to Monaco mapping
     const kindMap = {
       1: monaco.languages.CompletionItemKind.Text,
-      2: monaco.languages.CompletionItemKind.Method, // ⭐ Methods get star icon
+      2: monaco.languages.CompletionItemKind.Method,
       3: monaco.languages.CompletionItemKind.Function, // 𝑓 Functions
       4: monaco.languages.CompletionItemKind.Constructor,
       5: monaco.languages.CompletionItemKind.Field,
@@ -104,7 +100,7 @@ export const MonacoLSPProvider = ({ editorRef, monacoRef, language }: MonacoLSPP
 
         const text = model.getValue();
         const line = position.lineNumber - 1;
-        const character = position.column;
+        const character = position.column - 1;
 
         console.log("EVA01", character, line);
 
@@ -145,7 +141,7 @@ export const MonacoLSPProvider = ({ editorRef, monacoRef, language }: MonacoLSPP
 
     const hoverProvider = monaco.languages.registerHoverProvider(language, {
       provideHover: async (model, position) => {
-        if (!editor) return null;
+        if (!editor) return { contents: [], range: undefined };
 
         const text = model.getValue();
         const line = position.lineNumber - 1;
@@ -154,7 +150,7 @@ export const MonacoLSPProvider = ({ editorRef, monacoRef, language }: MonacoLSPP
         try {
           const hoverResult = await lsp.getHover(language, text, line, character);
 
-          if (!hoverResult || !hoverResult.contents) return null;
+          if (!hoverResult || !hoverResult.contents) return { contents: [], range: undefined };
 
           let contents: monaco.IMarkdownString[];
 
@@ -168,7 +164,7 @@ export const MonacoLSPProvider = ({ editorRef, monacoRef, language }: MonacoLSPP
             contents = [{ value: hoverResult.contents["value"] }];
           }
 
-          return {
+          return Promise.resolve({
             contents,
             range: hoverResult.range
               ? new monaco.Range(
@@ -178,10 +174,13 @@ export const MonacoLSPProvider = ({ editorRef, monacoRef, language }: MonacoLSPP
                   hoverResult.range.end.character + 1,
                 )
               : undefined,
-          };
+          });
         } catch (error) {
           console.error("Hover provider error:", error);
-          return null;
+          return Promise.resolve({
+            contents: [],
+            range: undefined,
+          });
         }
       },
     });

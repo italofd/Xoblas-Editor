@@ -11,14 +11,16 @@ RUN apt-get update && apt-get install -y \
     sudo \
     python3 \
     python3-pip \
-    python3-pylsp \
     procps \
     tree \
     && apt-get clean
 
 # Install LSP server via pip only
 RUN pip3 install --break-system-packages \
-    python-lsp-server[all]
+    python-lsp-server[all] \
+    python-lsp-black \
+    pylsp-mypy \
+    jedi
 
 # Create a restricted user
 RUN useradd -m -s /bin/bash termuser
@@ -26,6 +28,9 @@ RUN echo "termuser ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 # Set the working directory
 WORKDIR /home/termuser
+
+# Setup LSP config directories
+RUN mkdir -p /home/termuser/.config/pylsp
 
 # Copy the xoblas script
 COPY ./scripts/xoblas.sh /usr/local/bin/xoblas
