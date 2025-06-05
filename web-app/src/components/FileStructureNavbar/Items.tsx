@@ -1,5 +1,6 @@
 import { FileItemProps, FolderItemProps } from "@/types/filestructure";
 import { resolveIcon } from "./utils";
+import Image from "next/image";
 
 // Chevron SVG component
 const ChevronIcon = ({ isExpanded }: { isExpanded: boolean }) => (
@@ -23,7 +24,7 @@ export const FileItem = ({ name, depth }: FileItemProps) => {
       title={name}
     >
       <div className="w-3 mr-1"></div> {/* Spacer for alignment with folders */}
-      <img src={iconPath} alt="" className="w-4 h-4 mr-1.5" />
+      <Image src={iconPath} alt="" className="w-4 h-4 mr-1.5" />
       <span className="text-gray-300 truncate">{name}</span>
     </div>
   );
@@ -39,7 +40,7 @@ export const FolderItem = ({ name, toggleFolder, path, depth, isExpanded }: Fold
       title={name}
     >
       <ChevronIcon isExpanded={isExpanded} />
-      <img src={iconPath} alt="" className="w-4 h-4 mr-1.5" />
+      <Image src={iconPath} alt="" className="w-4 h-4 mr-1.5" />
       <span className="text-gray-200 truncate">{name}</span>
     </div>
   );

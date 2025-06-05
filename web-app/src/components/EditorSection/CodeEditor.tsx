@@ -5,7 +5,6 @@ import { useEffect } from "react";
 import * as monaco from "monaco-editor";
 
 import { Editor } from "@monaco-editor/react";
-import { MonacoLSPProvider } from "@/providers/LSProvider";
 
 export const CodeEditor = ({
   editorRef,
@@ -108,7 +107,6 @@ export const CodeEditor = ({
           suggestOnTriggerCharacters: true,
         }}
       />
-      <MonacoLSPProvider editorRef={editorRef} monacoRef={monacoRef} language="python" />
     </>
   );
 };

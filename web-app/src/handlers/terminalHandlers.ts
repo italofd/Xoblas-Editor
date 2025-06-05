@@ -1,5 +1,5 @@
 import { blue, green, reset } from "@/constants/terminal";
-import { Handlers, Socket, WsData } from "@/types/terminal";
+import { Handlers, WsData } from "@/types/terminal";
 import { Terminal } from "@xterm/xterm";
 import { RefObject } from "react";
 

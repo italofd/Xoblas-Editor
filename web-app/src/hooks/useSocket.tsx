@@ -26,7 +26,7 @@ export const useSocket = () => {
   /**
    * Returns a boolean meaning that we could send the message if returned true or not if false
    */
-  const sendEvent = useCallback((params: { type: AllSocketEvents; data: Object }) => {
+  const sendEvent = useCallback((params: { type: AllSocketEvents; data: object }) => {
     if (!isEnvReadyRef.current) return false;
 
     socket.current!.send(JSON.stringify({ type: params.type, ...params.data }));

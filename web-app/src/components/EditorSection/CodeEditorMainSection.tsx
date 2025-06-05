@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { MainLayout } from "./MainLayout";
 import { CodeEditorDTO } from "@/types/editor";
@@ -29,7 +29,6 @@ export const CodeEditorMainSection = () => {
   const editorRef = useRef<CodeEditorDTO>(null);
   const socketHook = useSocket();
   const lspConnection = useLSPConnection();
-  const [isLoading, setIsLoading] = useState(true);
 
   //Whenever we have file data, overwrite the terminal
   //This is used for already used and modified containers so UI don't get out of sync

@@ -25,7 +25,7 @@ import getKeybindingsServiceOverride from "@codingame/monaco-vscode-keybindings-
 import getBannerServiceOverride from "@codingame/monaco-vscode-view-banner-service-override";
 import getStatusBarServiceOverride from "@codingame/monaco-vscode-view-status-bar-service-override";
 import getTitleBarServiceOverride from "@codingame/monaco-vscode-view-title-bar-service-override";
-import getConfigurationServiceOverride from "@codingame/monaco-vscode-configuration-service-override";
+import getConfigServiceOverride from "@codingame/monaco-vscode-configuration-service-override";
 import getTextMateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
 import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
 import getHostServiceOverride from "@codingame/monaco-vscode-host-service-override";
@@ -87,7 +87,6 @@ export const EditorV2 = ({
   // Initialize editor when LSP connection is ready
   useEffect(() => {
     // Skip if already initialized or if connection is not ready
-
     if (
       hasInitializedRef.current ||
       !editorContainerRef.current ||
@@ -151,7 +150,7 @@ export const EditorV2 = ({
               ...getBannerServiceOverride(),
               ...getStatusBarServiceOverride(),
               ...getTitleBarServiceOverride(),
-              ...getConfigurationServiceOverride(),
+              ...getConfigServiceOverride(),
               ...getTextMateServiceOverride(),
               ...getThemeServiceOverride(),
               ...getModelServiceOverride(),
@@ -186,24 +185,6 @@ export const EditorV2 = ({
                 nameShort: "Xoblas Editor",
                 nameLong: "Xoblas Editor",
               },
-              // defaultLayout: {
-              //   editors: [
-              //     {
-              //       uri: monaco.Uri.file("/workspace/test.js"),
-              //       viewColumn: 1,
-              //     },
-              //     {
-              //       uri: monaco.Uri.file("/workspace/test.md"),
-              //       viewColumn: 2,
-              //     },
-              //   ],
-              //   layout: {
-              //     editors: {
-              //       orientation: 0,
-              //       groups: [{ size: 1 }, { size: 1 }],
-              //     },
-              //   },
-              // },
             },
             // viewsConfig: {
             //   viewServiceType: "ViewsService",
@@ -215,11 +196,7 @@ export const EditorV2 = ({
 
         console.log("Starting language wrapper");
 
-        // await newWrapper.getInitializingAwait();
-
         await newWrapper.start(editorContainerRef.current!);
-
-        // await newWrapper.getStartingAwait();
 
         // Create the language client
         const languageClient = new MonacoLanguageClient({
@@ -250,15 +227,14 @@ export const EditorV2 = ({
         });
 
         await updateUserConfiguration(`{
-    "editor.fontSize": 12,
-    "editor.lineHeight": 12,
-    "editor.fontFamily": "monospace",
-    "editor.letterSpacing": 0,
-      "editor.experimental.asyncTokenization": true,
-    "debug.toolBarLocation": "docked",
-
-    "workbench.colorTheme": "Default Dark+"
-    }`);
+        "editor.fontSize": 12,
+        "editor.lineHeight": 12,
+        "editor.fontFamily": "monospace",
+        "editor.letterSpacing": 0,
+        "editor.experimental.asyncTokenization": true,
+        "debug.toolBarLocation": "docked",
+        "workbench.colorTheme": "Default Dark+"
+        }`);
 
         await languageClient.start();
 
@@ -300,17 +276,7 @@ export const EditorV2 = ({
         wrapperRef.current = null;
       }
     };
-  }, [
-    lspConnection.isConnected,
-    lspConnection.reader,
-    lspConnection.writer,
-    lspConnection.socket,
-    initialCode,
-    languageId,
-    theme,
-    editorOptions,
-    onCodeChange,
-  ]);
+  }, [lspConnection, initialCode, languageId, theme, editorOptions, onCodeChange]);
 
   if (lspConnection.error) {
     return (
