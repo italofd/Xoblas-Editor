@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@codingame/monaco-vscode-api": "17.1.2",
-    "@codingame/monaco-vscode-python-default-extension": "^17.1.2",
+    "@codingame/monaco-vscode-python-default-extension": "17.1.2",
+    "@codingame/monaco-vscode-views-service-override": "17.1.2",
+    "@codingame/monaco-vscode-lifecycle-service-override": "17.1.2",
     "@monaco-editor/react": "^4.7.0",
     "@typefox/monaco-editor-react": "6.8.0",
     "@xterm/addon-clipboard": "^0.1.0",
@@ -26,7 +28,7 @@
     "react-resizable": "^3.0.5",
     "react-xtermjs": "^1.0.9",
     "uuid": "^11.1.0",
-    "vscode": "npm:@codingame/monaco-vscode-extension-api@~17.1.2",
+    "vscode": "npm:@codingame/monaco-vscode-extension-api@17.1.2",
     "vscode-json-languageservice": "~5.5.0",
     "vscode-languageclient": "~9.0.1",
     "vscode-languageserver": "~9.0.1",

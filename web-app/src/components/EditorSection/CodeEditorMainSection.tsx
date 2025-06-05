@@ -11,7 +11,6 @@ import dynamic from "next/dynamic";
 import { useSocket } from "@/hooks/useSocket";
 import LoadingOverlay from "../LoaderOverlay";
 import FileStructureNavbar from "../FileStructureNavbar";
-import { useMonacoInitialization } from "@/hooks/useMonacoInitialization";
 import { useLSPConnection } from "@/hooks/useLSPConnection";
 import { EditorV2 } from "../EditorV2/index";
 
@@ -29,20 +28,8 @@ const DynamicEditorV2 = dynamic(() => Promise.resolve(EditorV2), {
 export const CodeEditorMainSection = () => {
   const editorRef = useRef<CodeEditorDTO>(null);
   const socketHook = useSocket();
-  const { isInitialized, isVscodeInitialized, error: monacoInitError } = useMonacoInitialization();
   const lspConnection = useLSPConnection();
   const [isLoading, setIsLoading] = useState(true);
-
-  // Handle Monaco initialization
-  useEffect(() => {
-    if (isInitialized.current) {
-      setIsLoading(false);
-    }
-
-    if (monacoInitError) {
-      console.error("Failed to initialize Monaco:", monacoInitError);
-    }
-  }, [isInitialized, monacoInitError]);
 
   //Whenever we have file data, overwrite the terminal
   //This is used for already used and modified containers so UI don't get out of sync
@@ -53,11 +40,10 @@ export const CodeEditorMainSection = () => {
   }, [editorRef, socketHook.fileData]);
 
   // Determine if we should show the editor
-  const showEditor =
-    !isLoading && isInitialized.current && lspConnection.isConnected && isVscodeInitialized.current;
+  const showEditor = lspConnection.isConnected;
 
   // Determine overall loading state
-  const isSystemLoading = isLoading || !socketHook.isEnvReady || !lspConnection.isConnected;
+  const isSystemLoading = !socketHook.isEnvReady || !lspConnection.isConnected;
 
   return (
     <>

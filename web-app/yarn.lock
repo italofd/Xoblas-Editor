@@ -1140,6 +1140,13 @@
     "@codingame/monaco-vscode-api" "17.1.2"
     "@codingame/monaco-vscode-c8227507-8e59-53d6-b50b-71c0ab384cf4-common" "17.1.2"
 
+"@codingame/monaco-vscode-lifecycle-service-override@17.1.2":
+  version "17.1.2"
+  resolved "https://registry.yarnpkg.com/@codingame/monaco-vscode-lifecycle-service-override/-/monaco-vscode-lifecycle-service-override-17.1.2.tgz#a42b02a873317d747560753249eb1a7e7113edd9"
+  integrity sha512-JTmpDTdyKCjyy5IVOcGA1FmsxY0cDqf2TS6d8PrBYJz7mQzLL11S85wXQYxhFCSHspUdnrwu/KPkQcO6UULbaw==
+  dependencies:
+    "@codingame/monaco-vscode-api" "17.1.2"
+
 "@codingame/monaco-vscode-localization-service-override@~17.1.2":
   version "17.1.2"
   resolved "https://registry.yarnpkg.com/@codingame/monaco-vscode-localization-service-override/-/monaco-vscode-localization-service-override-17.1.2.tgz#c0cd0947fcb47dad654d1fe6811bb512a7f903ad"
@@ -1174,7 +1181,7 @@
   dependencies:
     "@codingame/monaco-vscode-api" "17.1.2"
 
-"@codingame/monaco-vscode-python-default-extension@^17.1.2":
+"@codingame/monaco-vscode-python-default-extension@17.1.2":
   version "17.1.2"
   resolved "https://registry.yarnpkg.com/@codingame/monaco-vscode-python-default-extension/-/monaco-vscode-python-default-extension-17.1.2.tgz#2e09a2d2e3624d3801c4875a8e15671ee77e201e"
   integrity sha512-kVGoWuRJ79OJ8HMlsK3TfQuWh+wdntlH6ZtwHB+WmoHiWWlEsfNQ1r7JuWzqDKtQf4D4SKfA6YYqxO92MXOsvA==
@@ -1310,7 +1317,7 @@
     "@codingame/monaco-vscode-f48982c4-9e82-55e2-b800-20e6d1e6096f-common" "17.1.2"
     "@codingame/monaco-vscode-fc3b1755-9783-51f9-b3e6-45e7ef6fe6e3-common" "17.1.2"
 
-"@codingame/monaco-vscode-views-service-override@~17.1.2":
+"@codingame/monaco-vscode-views-service-override@17.1.2", "@codingame/monaco-vscode-views-service-override@~17.1.2":
   version "17.1.2"
   resolved "https://registry.yarnpkg.com/@codingame/monaco-vscode-views-service-override/-/monaco-vscode-views-service-override-17.1.2.tgz#8cdc5dbe4475da605f8900a55ed82f0264dd83a7"
   integrity sha512-bzIYy8uv/klg76W7/fAhVxnYHD7QuEs/jOlwMKvSxGco7ACeNxPJKM0sU4m54xDDdyuR1IlC1jyC70Je7W6KAg==
@@ -4465,7 +4472,7 @@ vscode-ws-jsonrpc@~3.4.0:
   dependencies:
     vscode-jsonrpc "~8.2.1"
 
-"vscode@npm:@codingame/monaco-vscode-extension-api@~17.1.2":
+"vscode@npm:@codingame/monaco-vscode-extension-api@17.1.2", "vscode@npm:@codingame/monaco-vscode-extension-api@~17.1.2":
   version "17.1.2"
   resolved "https://registry.yarnpkg.com/@codingame/monaco-vscode-extension-api/-/monaco-vscode-extension-api-17.1.2.tgz#04cd502cf40bbfe60cdb3e9b036fdbb50cf62233"
   integrity sha512-jo5iA5edcskc4M5f7mVwq+dL/pE24d7Kja/80VQbF6VPC0ounfQwTjgOb+bY3FTg6jaFL1Gj6qrgaM8tnW81eQ==

@@ -13,6 +13,29 @@ import { WorkerLoader } from "monaco-languageclient/workerFactory";
 import { updateUserConfiguration } from "@codingame/monaco-vscode-configuration-service-override";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import "@codingame/monaco-vscode-python-default-extension";
+import "vscode/localExtensionHost";
+// import {
+//   defaultHtmlAugmentationInstructions,
+//   defaultViewsInit,
+// } from "monaco-editor-wrapper/vscode/services";
+
+import getEnvironmentServiceOverride from "@codingame/monaco-vscode-environment-service-override";
+import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
+import getKeybindingsServiceOverride from "@codingame/monaco-vscode-keybindings-service-override";
+import getBannerServiceOverride from "@codingame/monaco-vscode-view-banner-service-override";
+import getStatusBarServiceOverride from "@codingame/monaco-vscode-view-status-bar-service-override";
+import getTitleBarServiceOverride from "@codingame/monaco-vscode-view-title-bar-service-override";
+import getConfigurationServiceOverride from "@codingame/monaco-vscode-configuration-service-override";
+import getTextMateServiceOverride from "@codingame/monaco-vscode-textmate-service-override";
+import getThemeServiceOverride from "@codingame/monaco-vscode-theme-service-override";
+import getHostServiceOverride from "@codingame/monaco-vscode-host-service-override";
+import getExtensionsServiceOverride from "@codingame/monaco-vscode-extensions-service-override";
+import getLifecycleServiceOverride from "@codingame/monaco-vscode-lifecycle-service-override";
+
+import getModelServiceOverride from "@codingame/monaco-vscode-model-service-override";
+import getBaseServiceOverride from "@codingame/monaco-vscode-base-service-override";
+// import viewServiceOverride from "@codingame/monaco-vscode-views-service-override";
+import { configureDefaultWorkerFactory } from "monaco-editor-wrapper/workers/workerLoaders";
 
 // Define Props for the Editor
 export interface CustomMonacoEditorProps {
@@ -64,6 +87,7 @@ export const EditorV2 = ({
   // Initialize editor when LSP connection is ready
   useEffect(() => {
     // Skip if already initialized or if connection is not ready
+
     if (
       hasInitializedRef.current ||
       !editorContainerRef.current ||
@@ -81,6 +105,121 @@ export const EditorV2 = ({
         console.log("Initializing editor with LSP connection", lspConnection);
 
         const workspaceRoot = "/home/termuser/root";
+
+        const newWrapper = new MonacoEditorLanguageClientWrapper();
+        wrapperRef.current = newWrapper;
+
+        await newWrapper.init({
+          $type: "extended",
+          id: "editor-wrapper",
+          htmlContainer: editorContainerRef.current!,
+          logLevel: LogLevel.Debug,
+          editorAppConfig: {
+            monacoWorkerFactory: configureDefaultWorkerFactory,
+            codeResources: {
+              modified: {
+                text: initialCode,
+                uri: workspaceRoot + "/main.py",
+                enforceLanguageId: "python",
+              },
+              original: {
+                text: initialCode,
+                uri: workspaceRoot + "/main.py",
+                enforceLanguageId: "python",
+              },
+            },
+            // overrideAutomaticLayout: true,
+          },
+
+          vscodeApiConfig: {
+            enableExtHostWorker: true,
+            vscodeApiInitPerformExternally: false,
+            userConfiguration: {
+              json: JSON.stringify({
+                "editor.fontSize": 12,
+                "editor.lineHeight": 12,
+                "editor.fontFamily": "monospace",
+                "editor.letterSpacing": 0,
+                "editor.experimental.asyncTokenization": true,
+              }),
+            },
+            serviceOverrides: {
+              ...getBaseServiceOverride(),
+              ...getEnvironmentServiceOverride(),
+              ...getLanguagesServiceOverride(),
+              ...getKeybindingsServiceOverride(),
+              ...getBannerServiceOverride(),
+              ...getStatusBarServiceOverride(),
+              ...getTitleBarServiceOverride(),
+              ...getConfigurationServiceOverride(),
+              ...getTextMateServiceOverride(),
+              ...getThemeServiceOverride(),
+              ...getModelServiceOverride(),
+              ...getLifecycleServiceOverride(),
+              // ...viewServiceOverride(),
+              ...getExtensionsServiceOverride(),
+              ...getHostServiceOverride(),
+            },
+            workspaceConfig: {
+              enableWorkspaceTrust: true,
+              windowIndicator: {
+                label: "Xoblas Editor",
+                tooltip: "",
+                command: "",
+              },
+
+              workspaceProvider: {
+                trusted: true,
+                async open() {
+                  window.open(window.location.href);
+                  return true;
+                },
+                workspace: {
+                  folderUri: vscode.Uri.file("/workspace"),
+                  workspaceUri: vscode.Uri.file("/workspace/.vscode/workspace.code-workspace"),
+                },
+              },
+              configurationDefaults: {
+                "window.title": "Xoblas Editor${separator}${dirty}${activeEditorShort}",
+              },
+              productConfiguration: {
+                nameShort: "Xoblas Editor",
+                nameLong: "Xoblas Editor",
+              },
+              // defaultLayout: {
+              //   editors: [
+              //     {
+              //       uri: monaco.Uri.file("/workspace/test.js"),
+              //       viewColumn: 1,
+              //     },
+              //     {
+              //       uri: monaco.Uri.file("/workspace/test.md"),
+              //       viewColumn: 2,
+              //     },
+              //   ],
+              //   layout: {
+              //     editors: {
+              //       orientation: 0,
+              //       groups: [{ size: 1 }, { size: 1 }],
+              //     },
+              //   },
+              // },
+            },
+            // viewsConfig: {
+            //   viewServiceType: "ViewsService",
+            //   htmlAugmentationInstructions: defaultHtmlAugmentationInstructions,
+            //   viewsInitFunc: defaultViewsInit,
+            // },
+          },
+        });
+
+        console.log("Starting language wrapper");
+
+        // await newWrapper.getInitializingAwait();
+
+        await newWrapper.start(editorContainerRef.current!);
+
+        // await newWrapper.getStartingAwait();
 
         // Create the language client
         const languageClient = new MonacoLanguageClient({
@@ -103,7 +242,7 @@ export const EditorV2 = ({
               closed: () => ({ action: CloseAction.DoNotRestart }),
             },
           },
-          // Use the reader and writer                                  from our LSP connection
+          // Use the reader and writer from our LSP connection
           messageTransports: {
             reader: lspConnection.reader!,
             writer: lspConnection.writer!,
@@ -111,49 +250,19 @@ export const EditorV2 = ({
         });
 
         await updateUserConfiguration(`{
-    "editor.fontSize": 16,
+    "editor.fontSize": 12,
     "editor.lineHeight": 12,
     "editor.fontFamily": "monospace",
     "editor.letterSpacing": 0,
-                            "workbench.colorTheme": "Default Dark Modern",
+      "editor.experimental.asyncTokenization": true,
+    "debug.toolBarLocation": "docked",
 
+    "workbench.colorTheme": "Default Dark+"
     }`);
 
         await languageClient.start();
 
-        const newWrapper = new MonacoEditorLanguageClientWrapper();
-        wrapperRef.current = newWrapper;
-
-        await newWrapper.init({
-          $type: "extended",
-          id: "editor-wrapper",
-          logLevel: LogLevel.Debug,
-
-          editorAppConfig: {
-            codeResources: {
-              modified: {
-                text: initialCode,
-                uri: workspaceRoot + "/main.py",
-                enforceLanguageId: "python",
-              },
-              original: {
-                text: initialCode,
-                uri: workspaceRoot + "/main.py",
-                enforceLanguageId: "python",
-              },
-            },
-          },
-          vscodeApiConfig: {
-            vscodeApiInitPerformExternally: true,
-          },
-        });
-
-        console.log("Starting language wrapper");
-
-        await newWrapper.getStartingAwait();
-        await newWrapper.getInitializingAwait();
-
-        await newWrapper.start(editorContainerRef.current!);
+        console.log("Language client started");
 
         console.log("Started language wrapper");
       } catch (error) {
@@ -215,7 +324,16 @@ export const EditorV2 = ({
     );
   }
 
-  return <div ref={editorContainerRef} style={{ height: "100%", width: "100%" }} />;
+  return (
+    <>
+      <div id="workbench-container" style={{ height: "100%", width: "100%" }}>
+        <div id="titleBar"></div>
+        <div id="banner"></div>
+        <div id="workbench-top"></div>
+        <div ref={editorContainerRef} style={{ height: "100%", width: "100%" }} />
+      </div>
+    </>
+  );
 };
 
 export default EditorV2;
