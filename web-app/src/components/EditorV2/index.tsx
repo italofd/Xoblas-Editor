@@ -76,6 +76,16 @@ const workerLoaders: Partial<Record<string, WorkerLoader>> = {
       new URL("@codingame/monaco-vscode-textmate-service-override/worker", import.meta.url),
       { type: "module" },
     ),
+  LocalFileSearchWorker: () =>
+    new Worker(
+      new URL("@codingame/monaco-vscode-search-service-override/worker", import.meta.url),
+      { type: "module" },
+    ),
+  OutputLinkDetectionWorker: () =>
+    new Worker(
+      new URL("@codingame/monaco-vscode-output-service-override/worker", import.meta.url),
+      { type: "module" },
+    ),
 };
 
 window.MonacoEnvironment = {
@@ -150,6 +160,21 @@ export const EditorV2 = ({
 
           vscodeApiConfig: {
             enableExtHostWorker: true,
+            workspaceConfig: {
+              productConfiguration: {
+                nameShort: "monaco-vscode-api",
+                nameLong: "monaco-vscode-api",
+                extensionsGallery: {
+                  serviceUrl: "https://open-vsx.org/vscode/gallery",
+                  resourceUrlTemplate:
+                    "https://open-vsx.org/vscode/unpkg/{publisher}/{name}/{version}/{path}",
+                  extensionUrlTemplate:
+                    "https://open-vsx.org/vscode/gallery/{publisher}/{name}/latest",
+                  controlUrl: "",
+                  nlsBaseUrl: "",
+                },
+              },
+            },
             vscodeApiInitPerformExternally: false,
             userConfiguration: {
               json: JSON.stringify({
@@ -158,7 +183,6 @@ export const EditorV2 = ({
                 "editor.fontFamily": "monospace",
                 "editor.letterSpacing": 0,
                 "editor.experimental.asyncTokenization": true,
-                // "debug.toolBarLocation": "docked",
                 "workbench.colorTheme": "Default Dark+",
               }),
             },
@@ -244,24 +268,9 @@ export const EditorV2 = ({
         // );
         registerFileSystemOverlay(1, fileSystemProvider);
 
-        // await updateUserConfiguration(`{
-        // "editor.fontSize": 12,
-        // "editor.lineHeight": 12,
-        // "editor.fontFamily": "monospace",
-        // "editor.letterSpacing": 0,
-        // "editor.experimental.asyncTokenization": true,
-        // "debug.toolBarLocation": "floating",
-        // "workbench.colorTheme": "Default Dark+"
-        // }`);
-
         await languageClient.start();
 
         console.log("Language client started");
-
-        // monaco.editor.create(document.getElementById("editors")!, {
-        //   language: "python",
-        //   value: "Editor with VSCode config and large bold fonts",
-        // });
 
         // await Promise.all([
         //   await vscode.workspace.openTextDocument("/workspace/hello.ts"),
