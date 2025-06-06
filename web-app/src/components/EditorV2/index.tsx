@@ -14,10 +14,10 @@ import { updateUserConfiguration } from "@codingame/monaco-vscode-configuration-
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import "@codingame/monaco-vscode-python-default-extension";
 import "vscode/localExtensionHost";
-// import {
-//   defaultHtmlAugmentationInstructions,
-//   defaultViewsInit,
-// } from "monaco-editor-wrapper/vscode/services";
+import {
+  defaultHtmlAugmentationInstructions,
+  defaultViewsInit,
+} from "monaco-editor-wrapper/vscode/services";
 
 import getEnvironmentServiceOverride from "@codingame/monaco-vscode-environment-service-override";
 import getLanguagesServiceOverride from "@codingame/monaco-vscode-languages-service-override";
@@ -34,8 +34,27 @@ import getLifecycleServiceOverride from "@codingame/monaco-vscode-lifecycle-serv
 
 import getModelServiceOverride from "@codingame/monaco-vscode-model-service-override";
 import getBaseServiceOverride from "@codingame/monaco-vscode-base-service-override";
-// import viewServiceOverride from "@codingame/monaco-vscode-views-service-override";
+import viewServiceOverride from "@codingame/monaco-vscode-views-service-override";
+import getExplorerServiceOverride from "@codingame/monaco-vscode-explorer-service-override";
+import getDialogServiceOverride from "@codingame/monaco-vscode-dialogs-service-override";
+import getOutputServiceOverride from "@codingame/monaco-vscode-output-service-override";
 import { configureDefaultWorkerFactory } from "monaco-editor-wrapper/workers/workerLoaders";
+
+import getExtensionGalleryServiceOverride from "@codingame/monaco-vscode-extension-gallery-service-override";
+import getPreferencesServiceOverride from "@codingame/monaco-vscode-preferences-service-override";
+import getSearchServiceOverride from "@codingame/monaco-vscode-search-service-override";
+import getLanguageDetectionServiceOverride from "@codingame/monaco-vscode-language-detection-worker-service-override";
+import getUserDataSyncServiceOverride from "@codingame/monaco-vscode-user-data-sync-service-override";
+import getUserDataProfileServiceOverride from "@codingame/monaco-vscode-user-data-profile-service-override";
+import getEditSessionsServiceOverride from "@codingame/monaco-vscode-edit-sessions-service-override";
+import getInteractiveServiceOverride from "@codingame/monaco-vscode-interactive-service-override";
+import getPerformanceServiceOverride from "@codingame/monaco-vscode-performance-service-override";
+
+import {
+  RegisteredFileSystemProvider,
+  registerFileSystemOverlay,
+  RegisteredMemoryFile,
+} from "@codingame/monaco-vscode-files-service-override";
 
 // Define Props for the Editor
 export interface CustomMonacoEditorProps {
@@ -127,7 +146,6 @@ export const EditorV2 = ({
                 enforceLanguageId: "python",
               },
             },
-            // overrideAutomaticLayout: true,
           },
 
           vscodeApiConfig: {
@@ -140,10 +158,14 @@ export const EditorV2 = ({
                 "editor.fontFamily": "monospace",
                 "editor.letterSpacing": 0,
                 "editor.experimental.asyncTokenization": true,
+                // "debug.toolBarLocation": "docked",
+                "workbench.colorTheme": "Default Dark+",
               }),
             },
             serviceOverrides: {
               ...getBaseServiceOverride(),
+              ...getExplorerServiceOverride(),
+
               ...getEnvironmentServiceOverride(),
               ...getLanguagesServiceOverride(),
               ...getKeybindingsServiceOverride(),
@@ -155,42 +177,28 @@ export const EditorV2 = ({
               ...getThemeServiceOverride(),
               ...getModelServiceOverride(),
               ...getLifecycleServiceOverride(),
-              // ...viewServiceOverride(),
+              ...viewServiceOverride(),
               ...getExtensionsServiceOverride(),
               ...getHostServiceOverride(),
-            },
-            workspaceConfig: {
-              enableWorkspaceTrust: true,
-              windowIndicator: {
-                label: "Xoblas Editor",
-                tooltip: "",
-                command: "",
-              },
+              ...getDialogServiceOverride(),
+              ...getOutputServiceOverride(),
 
-              workspaceProvider: {
-                trusted: true,
-                async open() {
-                  window.open(window.location.href);
-                  return true;
-                },
-                workspace: {
-                  folderUri: vscode.Uri.file("/workspace"),
-                  workspaceUri: vscode.Uri.file("/workspace/.vscode/workspace.code-workspace"),
-                },
-              },
-              configurationDefaults: {
-                "window.title": "Xoblas Editor${separator}${dirty}${activeEditorShort}",
-              },
-              productConfiguration: {
-                nameShort: "Xoblas Editor",
-                nameLong: "Xoblas Editor",
-              },
+              ...getExtensionGalleryServiceOverride(),
+              ...getPreferencesServiceOverride(),
+              ...getSearchServiceOverride(),
+              ...getLanguageDetectionServiceOverride(),
+              ...getUserDataSyncServiceOverride(),
+              ...getUserDataProfileServiceOverride(),
+              ...getEditSessionsServiceOverride(),
+              ...getInteractiveServiceOverride(),
+              ...getPerformanceServiceOverride(),
             },
-            // viewsConfig: {
-            //   viewServiceType: "ViewsService",
-            //   htmlAugmentationInstructions: defaultHtmlAugmentationInstructions,
-            //   viewsInitFunc: defaultViewsInit,
-            // },
+
+            viewsConfig: {
+              viewServiceType: "ViewsService",
+              htmlAugmentationInstructions: defaultHtmlAugmentationInstructions,
+              viewsInitFunc: defaultViewsInit,
+            },
           },
         });
 
@@ -205,11 +213,6 @@ export const EditorV2 = ({
           clientOptions: {
             progressOnInitialization: true,
 
-            workspaceFolder: {
-              index: 0,
-              name: workspaceRoot,
-              uri: vscode.Uri.parse(workspaceRoot),
-            },
             documentSelector: [languageId],
             errorHandler: {
               error: (err) => {
@@ -226,21 +229,44 @@ export const EditorV2 = ({
           },
         });
 
-        await updateUserConfiguration(`{
-        "editor.fontSize": 12,
-        "editor.lineHeight": 12,
-        "editor.fontFamily": "monospace",
-        "editor.letterSpacing": 0,
-        "editor.experimental.asyncTokenization": true,
-        "debug.toolBarLocation": "docked",
-        "workbench.colorTheme": "Default Dark+"
-        }`);
+        const helloTsUri = vscode.Uri.file("/workspace/hello.ts");
+        const testerTsUri = vscode.Uri.file("/workspace/tester.ts");
+        const fileSystemProvider = new RegisteredFileSystemProvider(false);
+        fileSystemProvider.registerFile(new RegisteredMemoryFile(helloTsUri, "ioJASDIOAJDIOW"));
+        fileSystemProvider.registerFile(
+          new RegisteredMemoryFile(testerTsUri, "Xoblas pra caralho"),
+        );
+        // fileSystemProvider.registerFile(
+        //   new RegisteredMemoryFile(
+        //     vscode.Uri.file("/workspace/.vscode/workspace.code-workspace"),
+        //     "",
+        //   ),
+        // );
+        registerFileSystemOverlay(1, fileSystemProvider);
+
+        // await updateUserConfiguration(`{
+        // "editor.fontSize": 12,
+        // "editor.lineHeight": 12,
+        // "editor.fontFamily": "monospace",
+        // "editor.letterSpacing": 0,
+        // "editor.experimental.asyncTokenization": true,
+        // "debug.toolBarLocation": "floating",
+        // "workbench.colorTheme": "Default Dark+"
+        // }`);
 
         await languageClient.start();
 
         console.log("Language client started");
 
-        console.log("Started language wrapper");
+        // monaco.editor.create(document.getElementById("editors")!, {
+        //   language: "python",
+        //   value: "Editor with VSCode config and large bold fonts",
+        // });
+
+        // await Promise.all([
+        //   await vscode.workspace.openTextDocument("/workspace/hello.ts"),
+        //   await vscode.workspace.openTextDocument("/workspace/tester.ts"),
+        // ]);
       } catch (error) {
         console.error("Failed to initialize or start Monaco Editor wrapper:", error);
         if (wrapperRef.current) {
@@ -292,12 +318,7 @@ export const EditorV2 = ({
 
   return (
     <>
-      <div id="workbench-container" style={{ height: "100%", width: "100%" }}>
-        <div id="titleBar"></div>
-        <div id="banner"></div>
-        <div id="workbench-top"></div>
-        <div ref={editorContainerRef} style={{ height: "100%", width: "100%" }} />
-      </div>
+      <div ref={editorContainerRef} style={{ height: "100%", width: "100%" }} />
     </>
   );
 };

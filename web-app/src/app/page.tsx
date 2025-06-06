@@ -14,9 +14,8 @@ const CodeEditorMainSection = dynamic(
 export default function Home() {
   return (
     <div className="h-screen w-full">
-      <div className="flex h-full mx-auto py-12 px-16">
-        <CodeEditorMainSection />
-      </div>
+      {/* <div className="flex h-full mx-auto py-12 px-16"> */}
+      <CodeEditorMainSection />
     </div>
   );
 }

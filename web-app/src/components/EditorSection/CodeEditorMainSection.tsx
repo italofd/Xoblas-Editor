@@ -13,6 +13,7 @@ import LoadingOverlay from "../LoaderOverlay";
 import FileStructureNavbar from "../FileStructureNavbar";
 import { useLSPConnection } from "@/hooks/useLSPConnection";
 import { EditorV2 } from "../EditorV2/index";
+import "./editor.css";
 
 const XTerminal = dynamic(() => import("../Terminal/index"), {
   ssr: false,
@@ -46,17 +47,17 @@ export const CodeEditorMainSection = () => {
 
   return (
     <>
-      <FileStructureNavbar structure={socketHook.fileStructure} />
+      {/* <FileStructureNavbar structure={socketHook.fileStructure} /> */}
 
-      <div className="flex flex-col w-full h-full max-h-full overflow-hidden">
-        <LoadingOverlay isLoading={isSystemLoading} />
+      {/* <div className="flex flex-col w-full h-full max-h-full overflow-hidden"> */}
+      {/* <LoadingOverlay isLoading={isSystemLoading} /> */}
 
-        <div className="flex flex-col flex-grow min-h-0">
-          <MainLayout>{showEditor && <DynamicEditorV2 lspConnection={lspConnection} />}</MainLayout>
-        </div>
+      {/* <div className="flex flex-col flex-grow min-h-0"> */}
+      {showEditor && <DynamicEditorV2 lspConnection={lspConnection} />}
+      {/* </div> */}
 
-        <XTerminal socketHook={socketHook} />
-      </div>
+      {/* <XTerminal socketHook={socketHook} /> */}
+      {/* </div> */}
     </>
   );
 };
