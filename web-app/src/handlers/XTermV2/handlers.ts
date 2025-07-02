@@ -40,7 +40,7 @@ export class TerminalInputHandler {
   /**
    * Update terminal dimensions
    */
-  public updateTerminalDimensions(cols: number, rows: number): void {
+  public updateTerminalDimensions(cols: number, _: number): void {
     this.terminalCols = cols;
   }
 
@@ -62,7 +62,7 @@ export class TerminalInputHandler {
     const cwd = wsData.cwd || "~";
 
     // Base characters in prompt (brackets, @, spaces, $)
-    const baseChars = "[] $ ".length;
+    const baseChars = "[ ] $ ".length;
 
     // Calculate total visible length (without ANSI escape sequences)
     const totalLength = user.length + host.length + cwd.length + baseChars;
@@ -71,7 +71,7 @@ export class TerminalInputHandler {
     if (totalLength >= cols) {
       // Ensure we always have at least user@host and $
       const minPrompt = `${TerminalInputHandler.COLORS.GREEN}${user}@${host}${TerminalInputHandler.COLORS.RESET}$ `;
-      const minPromptVisibleLength = user.length + host.length + 2 + 2; // user@host + "@ " + "$ "
+      const minPromptVisibleLength = user.length + host.length + 2;
 
       // If even that's too long, just use a basic prompt
       if (minPromptVisibleLength >= cols) {
@@ -328,7 +328,7 @@ export class TerminalInputHandler {
   /**
    * Handle Arrow Up/Down keys (for history navigation)
    */
-  private handleArrowUpDown(data: string, dataEmitter: vscode.EventEmitter<string>): void {
+  private handleArrowUpDown(data: string, _: vscode.EventEmitter<string>): void {
     // TODO: Implement history navigation
     console.log("History navigation not implemented yet:", JSON.stringify(data));
   }

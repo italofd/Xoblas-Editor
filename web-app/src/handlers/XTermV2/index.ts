@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import { getServerURL } from "@/utils/getServerURL";
 import { TrackAnonymous } from "@/handlers/tracking";
 import { isCommandMessage, isFileMessage, isXoblasMessage } from "@/types/socket";
-import { TerminalInputHandler } from "@/handlers/XTermV2/terminalHandlers";
+import { TerminalInputHandler } from "@/handlers/XTermV2/handlers";
 
 export class XTerm extends SimpleTerminalBackend {
   private socket: WebSocket | null = null;
