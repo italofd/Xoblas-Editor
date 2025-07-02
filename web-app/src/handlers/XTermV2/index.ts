@@ -181,9 +181,6 @@ export class XTerm extends SimpleTerminalBackend {
           if (isCommandMessage(parsedJson)) {
             this.isRawMode = parsedJson.raw_mode;
 
-            // Update input handler with new WebSocket data
-            this.inputHandler.updateWsData(parsedJson);
-
             // Write the output to terminal (this preserves all ANSI sequences)
             if (parsedJson.output) {
               dataEmitter.fire(parsedJson.output);

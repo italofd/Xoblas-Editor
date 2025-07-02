@@ -9,7 +9,6 @@ export class TerminalInputHandler {
   private currentLine = "";
   private promptLength = 2;
   private terminalCols = 80;
-  private currentWsData: WsCommandMessage | null = null;
 
   // ANSI escape sequences for terminal operations
   private static readonly ANSI = {
@@ -43,13 +42,6 @@ export class TerminalInputHandler {
    */
   public updateTerminalDimensions(cols: number, rows: number): void {
     this.terminalCols = cols;
-  }
-
-  /**
-   * Update current WebSocket data
-   */
-  public updateWsData(wsData: WsCommandMessage | null): void {
-    this.currentWsData = wsData;
   }
 
   /**
@@ -92,7 +84,9 @@ export class TerminalInputHandler {
     }
 
     // Full prompt if it fits
-    const fullPrompt = `[${TerminalInputHandler.COLORS.GREEN}${user}@${host}${TerminalInputHandler.COLORS.RESET} ${TerminalInputHandler.COLORS.BLUE}${cwd}${TerminalInputHandler.COLORS.RESET}]$ `;
+    const fullPrompt =
+      `[${TerminalInputHandler.COLORS.GREEN}${user}@${host}${TerminalInputHandler.COLORS.RESET}` +
+      ` ${TerminalInputHandler.COLORS.BLUE}${cwd}${TerminalInputHandler.COLORS.RESET}]$ `;
     return { prompt: fullPrompt, length: totalLength };
   }
 
