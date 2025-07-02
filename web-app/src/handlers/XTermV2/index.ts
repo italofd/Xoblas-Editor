@@ -1,26 +1,15 @@
 "use client";
-import { Terminal } from "@xterm/xterm";
-import { RefObject, useEffect, useMemo, useRef } from "react";
-import { FitAddon } from "@xterm/addon-fit";
-import { handleTerminalKeyEvent, onWsData, resetTerminal } from "@/handlers/terminalHandlers";
-import { FileStructure, Handlers, Socket, WsData } from "@/types/terminal";
+
 import {
   ITerminalChildProcess,
   SimpleTerminalBackend,
   SimpleTerminalProcess,
-  ITerminalBackend,
 } from "@codingame/monaco-vscode-terminal-service-override";
 import * as vscode from "vscode";
 
 import { getServerURL } from "@/utils/getServerURL";
 import { TrackAnonymous } from "@/handlers/tracking";
-import {
-  AllSocketEvents,
-  isCommandMessage,
-  isFileMessage,
-  isXoblasMessage,
-  WsCommandMessage,
-} from "@/types/socket";
+import { isCommandMessage, isFileMessage, isXoblasMessage } from "@/types/socket";
 import { TerminalInputHandler } from "@/handlers/XTermV2/terminalHandlers";
 
 export class XTerm extends SimpleTerminalBackend {
@@ -111,13 +100,14 @@ export class XTerm extends SimpleTerminalBackend {
 
         // Send resize command to websocket
         if (this.parent.socket?.readyState === WebSocket.OPEN && this.parent.isEnvReady) {
-          this.parent.socket.send(
-            JSON.stringify({
-              type: "resize",
-              cols,
-              rows,
-            }),
-          );
+          // Check behavior first to not overload the server with resizing calls
+          // this.parent.socket.send(
+          //   JSON.stringify({
+          //     type: "resize",
+          //     cols,
+          //     rows,
+          //   }),
+          // );
         }
       }
 

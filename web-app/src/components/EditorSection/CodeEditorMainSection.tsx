@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-import { MainLayout } from "./MainLayout";
 import { CodeEditorDTO } from "@/types/editor";
 
 import "../Terminal/terminal.css";
@@ -10,14 +9,13 @@ import "../Terminal/terminal.css";
 import dynamic from "next/dynamic";
 import { useSocket } from "@/hooks/useSocket";
 import LoadingOverlay from "../LoaderOverlay";
-import FileStructureNavbar from "../FileStructureNavbar";
 import { useLSPConnection } from "@/hooks/useLSPConnection";
 import { EditorV2 } from "../EditorV2/index";
 import "./editor.css";
 
-const XTerminal = dynamic(() => import("../Terminal/index"), {
-  ssr: false,
-});
+// const XTerminal = dynamic(() => import("../Terminal/index"), {
+//   ssr: false,
+// });
 
 // Use dynamic import only for server-side rendering, but import the component directly for client-side
 // This prevents duplicate instances of the component
@@ -43,7 +41,7 @@ export const CodeEditorMainSection = () => {
   const showEditor = lspConnection.isConnected;
 
   // Determine overall loading state
-  const isSystemLoading = !socketHook.isEnvReady || !lspConnection.isConnected;
+  // const isSystemLoading = !socketHook.isEnvReady || !lspConnection.isConnected;
 
   return (
     <>

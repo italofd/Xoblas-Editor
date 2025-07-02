@@ -10,10 +10,7 @@ import * as vscode from "vscode";
 import { LogLevel } from "@codingame/monaco-vscode-api";
 import { LSPConnection } from "@/hooks/useLSPConnection";
 import { WorkerLoader } from "monaco-languageclient/workerFactory";
-import { updateUserConfiguration } from "@codingame/monaco-vscode-configuration-service-override";
-import "@codingame/monaco-vscode-theme-defaults-default-extension";
-import "@codingame/monaco-vscode-python-default-extension";
-import "vscode/localExtensionHost";
+
 import {
   defaultHtmlAugmentationInstructions,
   defaultViewsInit,
@@ -34,12 +31,13 @@ import getLifecycleServiceOverride from "@codingame/monaco-vscode-lifecycle-serv
 
 import getModelServiceOverride from "@codingame/monaco-vscode-model-service-override";
 import getBaseServiceOverride from "@codingame/monaco-vscode-base-service-override";
-import viewServiceOverride from "@codingame/monaco-vscode-views-service-override";
+import viewServiceOverride, {
+  isEditorPartVisible,
+} from "@codingame/monaco-vscode-views-service-override";
 import getExplorerServiceOverride from "@codingame/monaco-vscode-explorer-service-override";
 import getDialogServiceOverride from "@codingame/monaco-vscode-dialogs-service-override";
 import getOutputServiceOverride from "@codingame/monaco-vscode-output-service-override";
 import { configureDefaultWorkerFactory } from "monaco-editor-wrapper/workers/workerLoaders";
-
 import getExtensionGalleryServiceOverride from "@codingame/monaco-vscode-extension-gallery-service-override";
 import getPreferencesServiceOverride from "@codingame/monaco-vscode-preferences-service-override";
 import getSearchServiceOverride from "@codingame/monaco-vscode-search-service-override";
@@ -49,12 +47,21 @@ import getUserDataProfileServiceOverride from "@codingame/monaco-vscode-user-dat
 import getEditSessionsServiceOverride from "@codingame/monaco-vscode-edit-sessions-service-override";
 import getInteractiveServiceOverride from "@codingame/monaco-vscode-interactive-service-override";
 import getPerformanceServiceOverride from "@codingame/monaco-vscode-performance-service-override";
-
-import {
+import getQuickAccessServiceOverride from "@codingame/monaco-vscode-quickaccess-service-override";
+import getExtensionServiceOverride from "@codingame/monaco-vscode-extensions-service-override";
+import getFileServiceOverride, {
   RegisteredFileSystemProvider,
   registerFileSystemOverlay,
   RegisteredMemoryFile,
 } from "@codingame/monaco-vscode-files-service-override";
+import getStorageServiceOverride from "@codingame/monaco-vscode-storage-service-override";
+import getSecretStorageServiceOverride from "@codingame/monaco-vscode-secret-storage-service-override";
+import getTerminalServiceOverride from "@codingame/monaco-vscode-terminal-service-override";
+
+import "@codingame/monaco-vscode-python-default-extension";
+import "@codingame/monaco-vscode-theme-defaults-default-extension";
+import "vscode/localExtensionHost";
+import { XTerm } from "@/handlers/XTermV2";
 
 // Define Props for the Editor
 export interface CustomMonacoEditorProps {
@@ -66,26 +73,26 @@ export interface CustomMonacoEditorProps {
   lspConnection: LSPConnection;
 }
 
+const imptUrl = import.meta.url;
+
 const workerLoaders: Partial<Record<string, WorkerLoader>> = {
   TextEditorWorker: () =>
-    new Worker(new URL("monaco-editor/esm/vs/editor/editor.worker.js", import.meta.url), {
+    new Worker(new URL("monaco-editor/esm/vs/editor/editor.worker.js", imptUrl), {
       type: "module",
     }),
   TextMateWorker: () =>
-    new Worker(
-      new URL("@codingame/monaco-vscode-textmate-service-override/worker", import.meta.url),
-      { type: "module" },
-    ),
+    new Worker(new URL("@codingame/monaco-vscode-textmate-service-override/worker", imptUrl), {
+      type: "module",
+    }),
   LocalFileSearchWorker: () =>
-    new Worker(
-      new URL("@codingame/monaco-vscode-search-service-override/worker", import.meta.url),
-      { type: "module" },
-    ),
+    new Worker(new URL("@codingame/monaco-vscode-search-service-override/worker", imptUrl), {
+      type: "module",
+    }),
+
   OutputLinkDetectionWorker: () =>
-    new Worker(
-      new URL("@codingame/monaco-vscode-output-service-override/worker", import.meta.url),
-      { type: "module" },
-    ),
+    new Worker(new URL("@codingame/monaco-vscode-output-service-override/worker", imptUrl), {
+      type: "module",
+    }),
 };
 
 window.MonacoEnvironment = {
@@ -134,6 +141,51 @@ export const EditorV2 = ({
 
         const workspaceRoot = "/home/termuser/root";
 
+        const helloTsUri = monaco.Uri.file("/workspace/hello.ts");
+        const testerTsUri = vscode.Uri.file("/workspace/tester.js");
+        const fileSystemProvider = new RegisteredFileSystemProvider(false);
+
+        fileSystemProvider.registerFile(new RegisteredMemoryFile(helloTsUri, "ioJASDIOAJDIOW"));
+        fileSystemProvider.registerFile(
+          new RegisteredMemoryFile(testerTsUri, "Xoblas pra caralho"),
+        );
+        fileSystemProvider.registerFile(
+          new RegisteredMemoryFile(vscode.Uri.file(workspaceRoot + "/main.py"), initialCode),
+        );
+
+        fileSystemProvider.registerFile(
+          new RegisteredMemoryFile(
+            vscode.Uri.file("/workspace.code-workspace"),
+            JSON.stringify(
+              {
+                folders: [
+                  {
+                    path: "/workspace",
+                  },
+                ],
+              },
+              null,
+              2,
+            ),
+          ),
+        );
+
+        fileSystemProvider.registerFile(
+          new RegisteredMemoryFile(
+            monaco.Uri.file("/workspace/.vscode/extensions.json"),
+            JSON.stringify(
+              {
+                installed: ["PKief.material-icon-theme"],
+                recommendations: ["vscodevim.vim", "PKief.material-icon-theme"],
+              },
+              null,
+              2,
+            ),
+          ),
+        );
+
+        registerFileSystemOverlay(1, fileSystemProvider);
+
         const newWrapper = new MonacoEditorLanguageClientWrapper();
         wrapperRef.current = newWrapper;
 
@@ -142,25 +194,37 @@ export const EditorV2 = ({
           id: "editor-wrapper",
           htmlContainer: editorContainerRef.current!,
           logLevel: LogLevel.Debug,
+
           editorAppConfig: {
             monacoWorkerFactory: configureDefaultWorkerFactory,
             codeResources: {
               modified: {
                 text: initialCode,
-                uri: workspaceRoot + "/main.py",
+                uri: vscode.Uri.file(workspaceRoot + "/main.py").path,
                 enforceLanguageId: "python",
               },
               original: {
                 text: initialCode,
-                uri: workspaceRoot + "/main.py",
+                uri: vscode.Uri.file(workspaceRoot + "/main.py").path,
                 enforceLanguageId: "python",
               },
             },
           },
-
           vscodeApiConfig: {
             enableExtHostWorker: true,
             workspaceConfig: {
+              enableWorkspaceTrust: true,
+              welcomeBanner: { message: "Welcome to Xoblas Editor My Brotha" },
+              workspaceProvider: {
+                trusted: true,
+                async open() {
+                  window.open(window.location.href);
+                  return true;
+                },
+                workspace: {
+                  workspaceUri: vscode.Uri.file("/workspace.code-workspace"),
+                },
+              },
               productConfiguration: {
                 nameShort: "monaco-vscode-api",
                 nameLong: "monaco-vscode-api",
@@ -188,8 +252,6 @@ export const EditorV2 = ({
             },
             serviceOverrides: {
               ...getBaseServiceOverride(),
-              ...getExplorerServiceOverride(),
-
               ...getEnvironmentServiceOverride(),
               ...getLanguagesServiceOverride(),
               ...getKeybindingsServiceOverride(),
@@ -206,7 +268,6 @@ export const EditorV2 = ({
               ...getHostServiceOverride(),
               ...getDialogServiceOverride(),
               ...getOutputServiceOverride(),
-
               ...getExtensionGalleryServiceOverride(),
               ...getPreferencesServiceOverride(),
               ...getSearchServiceOverride(),
@@ -216,14 +277,36 @@ export const EditorV2 = ({
               ...getEditSessionsServiceOverride(),
               ...getInteractiveServiceOverride(),
               ...getPerformanceServiceOverride(),
+              ...getQuickAccessServiceOverride({
+                isKeybindingConfigurationVisible: isEditorPartVisible,
+                shouldUseGlobalPicker: (_editor, isStandalone) =>
+                  !isStandalone && isEditorPartVisible(),
+              }),
+              ...getStorageServiceOverride(),
+              ...getExplorerServiceOverride(),
+              ...getFileServiceOverride(),
+              ...getSecretStorageServiceOverride(),
+              ...getExtensionServiceOverride(),
+              ...getTerminalServiceOverride(new XTerm()),
             },
-
             viewsConfig: {
               viewServiceType: "ViewsService",
               htmlAugmentationInstructions: defaultHtmlAugmentationInstructions,
               viewsInitFunc: defaultViewsInit,
             },
           },
+          extensions: [
+            {
+              config: {
+                name: "mlc-app-playground",
+                publisher: "TypeFox",
+                version: "1.0.0",
+                engines: {
+                  vscode: "*",
+                },
+              },
+            },
+          ],
         });
 
         console.log("Starting language wrapper");
@@ -253,29 +336,9 @@ export const EditorV2 = ({
           },
         });
 
-        const helloTsUri = vscode.Uri.file("/workspace/hello.ts");
-        const testerTsUri = vscode.Uri.file("/workspace/tester.ts");
-        const fileSystemProvider = new RegisteredFileSystemProvider(false);
-        fileSystemProvider.registerFile(new RegisteredMemoryFile(helloTsUri, "ioJASDIOAJDIOW"));
-        fileSystemProvider.registerFile(
-          new RegisteredMemoryFile(testerTsUri, "Xoblas pra caralho"),
-        );
-        // fileSystemProvider.registerFile(
-        //   new RegisteredMemoryFile(
-        //     vscode.Uri.file("/workspace/.vscode/workspace.code-workspace"),
-        //     "",
-        //   ),
-        // );
-        registerFileSystemOverlay(1, fileSystemProvider);
-
         await languageClient.start();
 
         console.log("Language client started");
-
-        // await Promise.all([
-        //   await vscode.workspace.openTextDocument("/workspace/hello.ts"),
-        //   await vscode.workspace.openTextDocument("/workspace/tester.ts"),
-        // ]);
       } catch (error) {
         console.error("Failed to initialize or start Monaco Editor wrapper:", error);
         if (wrapperRef.current) {
