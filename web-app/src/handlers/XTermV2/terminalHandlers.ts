@@ -53,27 +53,6 @@ export class TerminalInputHandler {
   }
 
   /**
-   * Get current line content
-   */
-  public getCurrentLine(): string {
-    return this.currentLine;
-  }
-
-  /**
-   * Get current prompt length
-   */
-  public getPromptLength(): number {
-    return this.promptLength;
-  }
-
-  /**
-   * Set current line content (useful for history navigation)
-   */
-  public setCurrentLine(line: string): void {
-    this.currentLine = line;
-  }
-
-  /**
    * Function to create an appropriately sized prompt based on terminal width
    */
   public createPrompt(
