@@ -1,11 +1,14 @@
-# docker_manager.py - Handles Docker-specific operations
+from typing import Dict
 import asyncio
 import subprocess
 from terminal.terminal_config import TerminalConfig
 
+docker_sessions: Dict[str, "DockerManager"] = {}
+
 
 class DockerManager:
     def __init__(self, user_id: str, config: TerminalConfig):
+        print(docker_sessions)
         self.user_id = user_id
         self.config = config
         self.container_id = None
@@ -38,6 +41,16 @@ class DockerManager:
             raise Exception("Failed to build Docker image")
 
         return image_tag
+
+    @classmethod
+    def get_or_create(cls, user_id: str, config: TerminalConfig) -> "DockerManager":
+        existing = docker_sessions.get(user_id)
+        if existing and existing.is_container_running():
+            return existing
+
+        manager = cls(user_id, config)
+        docker_sessions[user_id] = manager
+        return manager
 
     async def is_image_built(self) -> bool:
         """Check if the Docker image already exists."""

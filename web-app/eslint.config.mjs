@@ -16,7 +16,7 @@ const eslintConfig = [
       "max-len": [
         "error",
         {
-          code: 100,
+          code: 120,
           tabWidth: 2,
           comments: 120, // This ensures comments are also checked
           ignoreUrls: true,
