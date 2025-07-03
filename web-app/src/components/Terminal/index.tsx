@@ -1,6 +1,5 @@
 "use client";
 import { useSocket } from "@/hooks/useSocket";
-import { useTerminal } from "@/hooks/useXterm";
 import { useEffect, useRef, useState } from "react";
 
 import { useXTerm } from "react-xtermjs";
@@ -10,29 +9,20 @@ import { Resizable, ResizableProps } from "react-resizable";
 import "react-resizable/css/styles.css";
 
 function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> }) {
-  const { isEnvReady, socket, wsData, isRawMode, handlers, fileStructure } = socketHook;
+  const { isEnvReady, wsData } = socketHook;
 
   const charRef = useRef<HTMLDivElement>(null);
   const lastSizeRef = useRef({ cols: 0, rows: 0 });
   const [dimensions, setDimensions] = useState({ height: 280, width: 100 });
 
   const { instance, ref } = useXTerm();
-  const { onResize } = useTerminal(
-    instance,
-    ref,
-    socket,
-    wsData,
-    fileStructure,
-    isRawMode,
-    handlers,
-  );
 
   //Resize Observer
   useEffect(() => {
     if (!ref.current || !charRef.current) return;
 
     const resizeObserver = new ResizeObserver(() => {
-      onResize(lastSizeRef, isEnvReady);
+      // onResize(lastSizeRef, isEnvReady);
     });
 
     resizeObserver.observe(ref.current);
@@ -41,7 +31,7 @@ function XTerminal({ socketHook }: { socketHook: ReturnType<typeof useSocket> })
     return () => {
       resizeObserver.disconnect();
     };
-  }, [ref, charRef, instance, wsData, lastSizeRef, onResize, isEnvReady]);
+  }, [ref, charRef, instance, wsData, lastSizeRef, isEnvReady]);
 
   const customOnresize: ResizableProps["onResize"] = (_, { size }) => {
     setDimensions({ width: size.width, height: size.height });

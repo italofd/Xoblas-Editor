@@ -94,9 +94,9 @@ export class XTerm extends SimpleTerminalBackend {
         this.queryCursorPosition(dataEmitter);
       }
 
-      override resize(cols: number, rows: number): void {
+      override resize(cols: number): void {
         // Update input handler's terminal dimensions
-        this.parent.inputHandler.updateTerminalDimensions(cols, rows);
+        this.parent.inputHandler.updateTerminalDimensions(cols);
 
         // Send resize command to websocket
         if (this.parent.socket?.readyState === WebSocket.OPEN && this.parent.isEnvReady) {

@@ -95,7 +95,7 @@ export const EditorV2 = ({
         const workspaceRoot = "/home/termuser/root";
 
         // Setup file system
-        setupFileSystemProvider(workspaceRoot, initialCode);
+        setupFileSystemProvider();
 
         // Create and initialize wrapper
         const newWrapper = await createAndInitializeWrapper(

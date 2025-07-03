@@ -52,7 +52,7 @@ import { MonacoEditorLanguageClientWrapper } from "monaco-editor-wrapper";
 import { LSPConnection } from "@/hooks/useLSPConnection";
 import { MonacoLanguageClient } from "monaco-languageclient";
 
-export const setupFileSystemProvider = (workspaceRoot: string, initialCode: string) => {
+export const setupFileSystemProvider = () => {
   const fileSystemProvider = new RegisteredFileSystemProvider(false);
 
   registerFileSystemOverlay(1, fileSystemProvider);
