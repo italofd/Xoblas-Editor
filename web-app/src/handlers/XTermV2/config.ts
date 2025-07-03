@@ -43,7 +43,6 @@ import getExtensionServiceOverride from "@codingame/monaco-vscode-extensions-ser
 import getFileServiceOverride, {
   RegisteredFileSystemProvider,
   registerFileSystemOverlay,
-  RegisteredMemoryFile,
 } from "@codingame/monaco-vscode-files-service-override";
 import getStorageServiceOverride from "@codingame/monaco-vscode-storage-service-override";
 import getSecretStorageServiceOverride from "@codingame/monaco-vscode-secret-storage-service-override";
@@ -54,51 +53,7 @@ import { LSPConnection } from "@/hooks/useLSPConnection";
 import { MonacoLanguageClient } from "monaco-languageclient";
 
 export const setupFileSystemProvider = (workspaceRoot: string, initialCode: string) => {
-  const helloTsUri = vscode.Uri.file("/workspace/hello.ts");
-  const testerTsUri = vscode.Uri.file("/workspace/tester.js");
   const fileSystemProvider = new RegisteredFileSystemProvider(false);
-
-  // Register sample files
-  fileSystemProvider.registerFile(new RegisteredMemoryFile(helloTsUri, "ioJASDIOAJDIOW"));
-  fileSystemProvider.registerFile(new RegisteredMemoryFile(testerTsUri, "Xoblas pra caralho"));
-
-  // Register main Python file
-  fileSystemProvider.registerFile(
-    new RegisteredMemoryFile(vscode.Uri.file(workspaceRoot + "/main.py"), initialCode),
-  );
-
-  // Register workspace configuration
-  fileSystemProvider.registerFile(
-    new RegisteredMemoryFile(
-      vscode.Uri.file("/workspace.code-workspace"),
-      JSON.stringify(
-        {
-          folders: [
-            {
-              path: "/workspace",
-            },
-          ],
-        },
-        null,
-        2,
-      ),
-    ),
-  );
-
-  // Register VSCode extensions configuration
-  fileSystemProvider.registerFile(
-    new RegisteredMemoryFile(
-      vscode.Uri.file("/workspace/.vscode/extensions.json"),
-      JSON.stringify(
-        {
-          installed: ["PKief.material-icon-theme"],
-          recommendations: ["vscodevim.vim", "PKief.material-icon-theme"],
-        },
-        null,
-        2,
-      ),
-    ),
-  );
 
   registerFileSystemOverlay(1, fileSystemProvider);
   return fileSystemProvider;
@@ -116,7 +71,6 @@ export const createAndInitializeWrapper = async (
     id: "editor-wrapper",
     htmlContainer,
     logLevel: LogLevel.Debug,
-
     editorAppConfig: {
       monacoWorkerFactory: configureDefaultWorkerFactory,
       codeResources: {
@@ -144,7 +98,8 @@ export const createAndInitializeWrapper = async (
             return true;
           },
           workspace: {
-            workspaceUri: vscode.Uri.file("/workspace.code-workspace"),
+            folderUri: vscode.Uri.file("/home"),
+            // workspaceUri: vscode.Uri.file("/xoblas.code-workspace"),
           },
         },
         productConfiguration: {

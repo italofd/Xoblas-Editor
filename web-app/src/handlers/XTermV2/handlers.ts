@@ -40,7 +40,7 @@ export class TerminalInputHandler {
   /**
    * Update terminal dimensions
    */
-  public updateTerminalDimensions(cols: number, _: number): void {
+  public updateTerminalDimensions(cols: number): void {
     this.terminalCols = cols;
   }
 
@@ -251,7 +251,7 @@ export class TerminalInputHandler {
 
       case "\x1b[A": // Arrow Up
       case "\x1b[B": // Arrow Down
-        this.handleArrowUpDown(data, dataEmitter);
+        this.handleArrowUpDown(data);
         break;
 
       default:
@@ -328,7 +328,7 @@ export class TerminalInputHandler {
   /**
    * Handle Arrow Up/Down keys (for history navigation)
    */
-  private handleArrowUpDown(data: string, _: vscode.EventEmitter<string>): void {
+  private handleArrowUpDown(data: string): void {
     // TODO: Implement history navigation
     console.log("History navigation not implemented yet:", JSON.stringify(data));
   }
