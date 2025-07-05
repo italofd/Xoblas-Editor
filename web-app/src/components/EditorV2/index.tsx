@@ -14,6 +14,7 @@ import { setupFileSystemProvider } from "@/handlers/XTermV2/config";
 import "@codingame/monaco-vscode-python-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import "vscode/localExtensionHost";
+import { fileSystemWatcher } from "@/handlers/XTermV2/fileSystem";
 
 // Define Props for the Editor
 export interface CustomMonacoEditorProps {
@@ -118,7 +119,9 @@ export const EditorV2 = ({
       }
     };
 
-    initEditor();
+    initEditor().then(() => {
+      fileSystemWatcher();
+    });
 
     return () => {
       if (languageClientRef.current && languageClientRef.current.isRunning()) {
