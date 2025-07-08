@@ -244,9 +244,10 @@ class XoblasEditor:
         return await self.file_manager.read_file(file_path)
 
     async def close(self) -> None:
-        """Close the PTY shell session and clean up Docker resources."""
+        """Close the PTY shell session without stopping the Docker container."""
         # Close the PTY
         self.pty.close()
 
-        # Stop and remove the Docker container
-        await self.docker.stop_container()
+        # Note: We no longer stop the container here since it's managed by DockerManager
+        # The container will be stopped when all connections are closed
+        print(f"Closed XoblasEditor for user {self.user_id}")

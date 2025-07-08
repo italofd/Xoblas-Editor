@@ -1,15 +1,42 @@
 from typing import Dict
-
+import asyncio
 from terminal.docker_manager import DockerManager
+from .filesystem_watcher import FilesystemWatcher
 
 
 class FileManager:
     def __init__(self, docker_manager: DockerManager):
         self.docker_manager = docker_manager
+        self.filesystem_watcher = FilesystemWatcher(docker_manager)
+
+    async def start_filesystem_watcher(self, websocket_callback):
+        """Start the bidirectional filesystem watcher."""
+        self.filesystem_watcher.set_websocket_callback(websocket_callback)
+        await self.filesystem_watcher.start_watching()
+
+        # Start polling for changes in background
+        asyncio.create_task(self.filesystem_watcher.poll_for_changes())
+
+    async def stop_filesystem_watcher(self):
+        """Stop the filesystem watcher."""
+        await self.filesystem_watcher.stop_watching()
 
     async def handle_file_operations(self, operations_data: Dict) -> Dict:
         """Handle batch file operations with optimized directory detection."""
         results = []
+
+        # Mark operations as pending to avoid feedback loops
+        operation = operations_data["operation"]
+        for file_info in operations_data.get("files", []):
+            path = file_info["path"]
+            self.filesystem_watcher.mark_operation_pending(operation, path)
+
+            # For rename operations, mark both old and new paths
+            if operation == "rename" and "oldPath" in file_info:
+                self.filesystem_watcher.mark_operation_pending(
+                    "delete", file_info["oldPath"]
+                )
+                self.filesystem_watcher.mark_operation_pending("create", path)
 
         for file_info in operations_data.get("files", []):
             path = file_info["path"]

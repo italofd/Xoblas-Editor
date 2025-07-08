@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Set
 import asyncio
 import subprocess
 from terminal.terminal_config import TerminalConfig
@@ -6,6 +6,8 @@ from terminal.terminal_config import TerminalConfig
 docker_sessions: Dict[str, "DockerManager"] = {}
 # Add a global lock for container startup per user
 container_startup_locks: Dict[str, asyncio.Lock] = {}
+# Track active WebSocket connections per user
+active_connections: Dict[str, Set[str]] = {}
 
 
 class DockerManager:
@@ -61,7 +63,72 @@ class DockerManager:
         if user_id not in container_startup_locks:
             container_startup_locks[user_id] = asyncio.Lock()
 
+        # Initialize connection tracking for this user
+        if user_id not in active_connections:
+            active_connections[user_id] = set()
+
         return manager
+
+    @classmethod
+    def register_connection(cls, user_id: str, connection_id: str):
+        """Register a new WebSocket connection for this user"""
+        if user_id not in active_connections:
+            active_connections[user_id] = set()
+        active_connections[user_id].add(connection_id)
+        print(
+            f"Registered connection {connection_id} for user {user_id}. Active: {len(active_connections[user_id])}"
+        )
+
+    @classmethod
+    def unregister_connection(cls, user_id: str, connection_id: str):
+        """Unregister a WebSocket connection for this user"""
+        if user_id in active_connections:
+            active_connections[user_id].discard(connection_id)
+            print(
+                f"Unregistered connection {connection_id} for user {user_id}. Active: {len(active_connections[user_id])}"
+            )
+
+            # If no more connections, clean up the Docker session
+            if len(active_connections[user_id]) == 0:
+                print(
+                    f"No more active connections for user {user_id}. Scheduling cleanup."
+                )
+                # Schedule cleanup with a delay to allow for quick reconnections (like refresh)
+                asyncio.create_task(cls._delayed_cleanup(user_id))
+
+    @classmethod
+    async def _delayed_cleanup(cls, user_id: str):
+        """Clean up Docker session after a delay if no connections are re-established"""
+        # Wait a bit to see if user reconnects (common during page refresh)
+        await asyncio.sleep(5.0)  # 5 second grace period
+
+        # Double-check if there are still no active connections
+        if user_id in active_connections and len(active_connections[user_id]) == 0:
+            print(f"Performing delayed cleanup for user {user_id}")
+            await cls._cleanup_user_session(user_id)
+
+    @classmethod
+    async def _cleanup_user_session(cls, user_id: str):
+        """Clean up all resources for a user"""
+        # Remove from active connections
+        if user_id in active_connections:
+            del active_connections[user_id]
+
+        # Stop and remove container, then remove from sessions
+        if user_id in docker_sessions:
+            docker_manager = docker_sessions[user_id]
+            try:
+                await docker_manager.stop_container()
+            except Exception as e:
+                print(f"Error stopping container for user {user_id}: {e}")
+
+            # Remove from sessions
+            del docker_sessions[user_id]
+            print(f"Cleaned up Docker session for user {user_id}")
+
+        # Clean up startup locks
+        if user_id in container_startup_locks:
+            del container_startup_locks[user_id]
 
     async def is_image_built(self) -> bool:
         """Check if the Docker image already exists."""

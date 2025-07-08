@@ -2,6 +2,7 @@ from fastapi import WebSocket, APIRouter
 from typing import Dict
 import json
 import re
+import asyncio
 from filemanager.index import FileManager
 from terminal.docker_manager import DockerManager
 from terminal.terminal_config import TerminalConfig
@@ -37,11 +38,24 @@ async def ws_filesystem(websocket: WebSocket, user_id: str):
 
         print(f"Filesystem WebSocket connected for user: {sanitized_user_id}")
 
+        # Create callback for sending filesystem changes to webapp
+        async def send_filesystem_change(change_data: Dict):
+            """Send filesystem change from container to webapp."""
+            try:
+                await websocket.send_json(change_data)
+                print(f"Sent filesystem change to webapp: {change_data['operation']}")
+            except Exception as e:
+                print(f"Error sending filesystem change: {e}")
+
+        # Start the bidirectional filesystem watcher
+        await file_manager.start_filesystem_watcher(send_filesystem_change)
+
         # Send connection confirmation
         await websocket.send_json(
             {
                 "type": "filesystem_connected",
                 "message": "Filesystem WebSocket connected successfully",
+                "bidirectional": True,
             }
         )
 
@@ -64,6 +78,27 @@ async def ws_filesystem(websocket: WebSocket, user_id: str):
 
                     # Send result back to client
                     await websocket.send_json(result)
+
+                elif operation_type == "start_watching":
+                    # Client explicitly requesting to start watching (if not already started)
+                    await websocket.send_json(
+                        {
+                            "type": "watching_status",
+                            "watching": True,
+                            "message": "Filesystem watching is active",
+                        }
+                    )
+
+                elif operation_type == "stop_watching":
+                    # Client requesting to stop watching
+                    await file_manager.stop_filesystem_watcher()
+                    await websocket.send_json(
+                        {
+                            "type": "watching_status",
+                            "watching": False,
+                            "message": "Filesystem watching stopped",
+                        }
+                    )
 
                 else:
                     await websocket.send_json(
@@ -90,7 +125,9 @@ async def ws_filesystem(websocket: WebSocket, user_id: str):
         print(f"Filesystem WebSocket error: {e}")
 
     finally:
-        # Clean up the filesystem session
+        # Clean up the filesystem session and stop watcher
         if sanitized_user_id in active_filesystem_sessions:
+            file_manager = active_filesystem_sessions[sanitized_user_id]
+            await file_manager.stop_filesystem_watcher()
             del active_filesystem_sessions[sanitized_user_id]
         print(f"Filesystem WebSocket disconnected for user: {sanitized_user_id}")

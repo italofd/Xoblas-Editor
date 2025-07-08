@@ -16,6 +16,10 @@ interface FileOperationBatch {
   timestamp: number;
 }
 
+// Track operations initiated by this client to avoid feedback loops
+const pendingClientOperations = new Set<string>();
+const OPERATION_TIMEOUT = 3000; // 3 seconds
+
 // Fast file extension check
 function hasFileExtension(uri: vscode.Uri): boolean {
   const path = uri.fsPath;
@@ -45,6 +49,23 @@ async function isDirectory(uri: vscode.Uri, operation: string): Promise<boolean>
   }
 }
 
+// Mark operation as client-initiated to avoid feedback loop
+function markClientOperation(operation: string, path: string) {
+  const operationKey = `${operation}:${path}`;
+  pendingClientOperations.add(operationKey);
+
+  // Remove after timeout
+  setTimeout(() => {
+    pendingClientOperations.delete(operationKey);
+  }, OPERATION_TIMEOUT);
+}
+
+// Check if operation was initiated by this client
+function isClientInitiated(operation: string, path: string): boolean {
+  const operationKey = `${operation}:${path}`;
+  return pendingClientOperations.has(operationKey);
+}
+
 // Generic function to process all file operations including rename
 async function processFileOperation(
   operation: "create" | "delete" | "change" | "rename",
@@ -62,8 +83,13 @@ async function processFileOperation(
           const renameFile = file as { oldUri: vscode.Uri; newUri: vscode.Uri };
           uri = renameFile.newUri;
           oldPath = renameFile.oldUri.fsPath;
+
+          // Mark both paths as client-initiated
+          markClientOperation("delete", oldPath);
+          markClientOperation("create", uri.fsPath);
         } else {
           uri = file as vscode.Uri;
+          markClientOperation(operation, uri.fsPath);
         }
 
         const isDir = await isDirectory(uri, operation);
@@ -88,6 +114,86 @@ async function processFileOperation(
     sendFileOperationToWebSocket(batch, websocket);
   } catch (error) {
     console.error(`Error processing ${operation} operation:`, error);
+  }
+}
+
+// Handle filesystem changes coming from the container
+function handleContainerFilesystemChange(changeData: any) {
+  console.log("Received filesystem change from container:", changeData);
+
+  // Extract file information
+  const files = changeData.files || [];
+
+  for (const fileInfo of files) {
+    const { operation, path, oldPath, isDirectory } = fileInfo;
+
+    // Skip if this was initiated by this client
+    if (isClientInitiated(operation, path)) {
+      console.log(`Skipping client-initiated change: ${operation} ${path}`);
+      continue;
+    }
+
+    // Skip if it's a rename and the old path was client-initiated
+    if (operation === "rename" && oldPath && isClientInitiated("delete", oldPath)) {
+      console.log(`Skipping client-initiated rename: ${oldPath} -> ${path}`);
+      continue;
+    }
+
+    // Apply the change to the local file system
+    applyContainerChangeToWorkspace(operation, path, oldPath, isDirectory);
+  }
+}
+
+// Apply filesystem changes from container to the VSCode workspace
+async function applyContainerChangeToWorkspace(
+  operation: string,
+  path: string,
+  oldPath?: string,
+  isDirectory?: boolean,
+) {
+  try {
+    const uri = vscode.Uri.file(path);
+
+    switch (operation) {
+      case "create":
+        if (isDirectory) {
+          await vscode.workspace.fs.createDirectory(uri);
+        } else {
+          await vscode.workspace.fs.writeFile(uri, new Uint8Array());
+        }
+        break;
+
+      case "delete":
+        try {
+          await vscode.workspace.fs.delete(uri, { recursive: true, useTrash: false });
+        } catch (error) {
+          // File might already be deleted, ignore error
+          console.log(`File already deleted: ${path}`);
+        }
+        break;
+
+      case "rename":
+        if (oldPath) {
+          const oldUri = vscode.Uri.file(oldPath);
+          try {
+            await vscode.workspace.fs.rename(oldUri, uri, { overwrite: true });
+          } catch (error) {
+            console.error(`Error renaming ${oldPath} to ${path}:`, error);
+          }
+        }
+        break;
+
+      case "change":
+        // For file changes, we could potentially reload the file content
+        // For now, just log it
+        console.log(`File changed in container: ${path}`);
+        break;
+
+      default:
+        console.log(`Unknown operation from container: ${operation}`);
+    }
+  } catch (error) {
+    console.error(`Error applying container change: ${operation} ${path}`, error);
   }
 }
 
@@ -127,11 +233,19 @@ function initializeFilesystemWebSocket(): WebSocket {
       const data = JSON.parse(event.data);
       console.log("Filesystem WebSocket received:", data);
 
-      // Handle different message types if needed
+      // Handle different message types
       if (data.type === "filesystem_connected") {
         console.log("Filesystem WebSocket connection confirmed");
+        if (data.bidirectional) {
+          console.log("Bidirectional filesystem watching enabled");
+        }
       } else if (data.type === "file_operation_result") {
         console.log("File operation result:", data);
+      } else if (data.type === "filesystem_change_from_container") {
+        // Handle filesystem changes from the container
+        handleContainerFilesystemChange(data);
+      } else if (data.type === "watching_status") {
+        console.log("Filesystem watching status:", data);
       } else if (data.type === "error") {
         console.error("Filesystem WebSocket error:", data.message);
       }
