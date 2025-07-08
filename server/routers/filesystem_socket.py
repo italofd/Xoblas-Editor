@@ -29,9 +29,8 @@ async def ws_filesystem(websocket: WebSocket, user_id: str):
         config = TerminalConfig()
         docker_manager = DockerManager.get_or_create(sanitized_user_id, config)
 
-        # Ensure container is running
-        if not docker_manager.is_container_running():
-            await docker_manager.start_container()
+        # Ensure container is running with proper synchronization
+        await docker_manager.ensure_container_running()
 
         file_manager = FileManager(docker_manager)
         active_filesystem_sessions[sanitized_user_id] = file_manager

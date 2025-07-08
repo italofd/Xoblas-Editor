@@ -72,7 +72,7 @@ export class XTerm extends SimpleTerminalBackend {
           if (match) {
             const row = parseInt(match[1]);
             const col = parseInt(match[2]);
-            this.cursorPosition = { x: col - 1, y: row - 1 }; // Convert to 0-based
+            this.cursorPosition = { x: col - 1, y: row - 1 };
           }
 
           // Process the actual input using the input handler

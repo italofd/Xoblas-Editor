@@ -4,6 +4,8 @@ import subprocess
 from terminal.terminal_config import TerminalConfig
 
 docker_sessions: Dict[str, "DockerManager"] = {}
+# Add a global lock for container startup per user
+container_startup_locks: Dict[str, asyncio.Lock] = {}
 
 
 class DockerManager:
@@ -15,6 +17,8 @@ class DockerManager:
         self.image_name = config.DEFAULT_IMAGE_NAME
         self.container_name = f"{config.DEFAULT_CONTAINER_NAME}_{user_id}"
         self.dockerfile_path = config.DEFAULT_DOCKERFILE_PATH
+        # Add instance-level startup state tracking
+        self._startup_in_progress = False
 
     async def build_image(self) -> str:
         """Build Docker image from Dockerfile if not already built."""
@@ -45,11 +49,18 @@ class DockerManager:
     @classmethod
     def get_or_create(cls, user_id: str, config: TerminalConfig) -> "DockerManager":
         existing = docker_sessions.get(user_id)
-        if existing and existing.is_container_running():
+
+        print("EVA01", existing)
+        if existing is not None:
             return existing
 
         manager = cls(user_id, config)
         docker_sessions[user_id] = manager
+
+        # Create a startup lock for this user if it doesn't exist
+        if user_id not in container_startup_locks:
+            container_startup_locks[user_id] = asyncio.Lock()
+
         return manager
 
     async def is_image_built(self) -> bool:
@@ -60,6 +71,44 @@ class DockerManager:
 
         stdout, _ = await process.communicate()
         return self.image_name in stdout.decode()
+
+    async def ensure_container_running(self) -> str:
+        """Ensure container is running with proper synchronization to prevent multiple containers."""
+
+        # Get or create the startup lock for this user
+        if self.user_id not in container_startup_locks:
+            container_startup_locks[self.user_id] = asyncio.Lock()
+
+        startup_lock = container_startup_locks[self.user_id]
+
+        async with startup_lock:
+            # Double-check if container is running after acquiring lock
+            if self.is_container_running():
+                return self.container_id
+
+            # If startup is already in progress, wait for it
+            if self._startup_in_progress:
+                # Wait a bit and check again
+                while self._startup_in_progress:
+                    await asyncio.sleep(0.1)
+                    if self.is_container_running():
+                        return self.container_id
+
+            # Start the container
+            self._startup_in_progress = True
+            try:
+                # Build image first
+                await self.build_image()
+
+                # Start container
+                container_id = await self.start_container()
+
+                # Wait a moment for container to be fully ready
+                await asyncio.sleep(0.2)
+
+                return container_id
+            finally:
+                self._startup_in_progress = False
 
     async def start_container(self) -> str:
         """Start the Docker container and return its ID."""

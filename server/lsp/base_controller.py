@@ -35,9 +35,8 @@ class BaseLSPController(ABC):
     async def start(self) -> bool:
         """Start the LSP server"""
         try:
-            # Ensure container is running
-            if not self.docker.is_container_running():
-                await self.docker.start_container()
+            # Ensure container is running with proper synchronization
+            await self.docker.ensure_container_running()
 
             # Install LSP server if needed
             if not await self.install_lsp_server():

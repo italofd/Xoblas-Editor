@@ -33,11 +33,8 @@ class XoblasEditor:
 
     async def start(self) -> None:
         """Start the PTY shell session in a Docker container."""
-        # Build the Docker image
-        await self.docker.build_image()
-
-        # Start the container
-        container_id = await self.docker.start_container()
+        # Ensure container is running (this will build image and start container if needed)
+        container_id = await self.docker.ensure_container_running()
 
         # Clean vim file listeners (lockers)
         await self.docker.cleanup_vim_locks()
