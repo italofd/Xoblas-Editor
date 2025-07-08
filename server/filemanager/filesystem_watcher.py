@@ -1,6 +1,8 @@
 import asyncio
 from typing import Dict, Set, Optional, Callable, Awaitable
 import json
+import base64
+from pathlib import Path
 
 
 class FilesystemWatcher:
@@ -18,9 +20,6 @@ class FilesystemWatcher:
 
         # Track operations initiated by the webapp to avoid feedback loops
         self.pending_operations: Set[str] = set()
-        self.operation_timeout = (
-            2.0  # seconds to wait before considering operation complete
-        )
 
         # Callback for sending messages to webapp
         self.send_callback: Optional[Callable[[Dict], Awaitable[None]]] = None
@@ -37,9 +36,6 @@ class FilesystemWatcher:
         try:
             # Ensure the watch directory exists in the container
             await self.docker_manager.exec_command(f"mkdir -p {self.watch_path}")
-
-            # Install watchdog in the container if not already installed
-            await self._ensure_watchdog_installed()
 
             # Start the watcher script inside the container
             await self._start_container_watcher()
@@ -66,23 +62,12 @@ class FilesystemWatcher:
         except Exception as e:
             print(f"Error stopping filesystem watcher: {e}")
 
-    async def _ensure_watchdog_installed(self):
-        """Ensure watchdog is installed in the container."""
-        stdout, stderr = await self.docker_manager.exec_command(
-            "python3 -c 'import watchdog' 2>/dev/null"
-        )
-        if stderr:
-            print("Installing watchdog in container...")
-            await self.docker_manager.exec_command("pip3 install watchdog")
-
     async def _start_container_watcher(self):
         """Start the watcher script inside the container."""
-        # Create the monitoring script inside the container
-        monitor_script = self._get_monitor_script()
+        # Read the monitoring script from the external file
+        monitor_script = self._load_monitor_script()
 
         # Write the script to the container
-        import base64
-
         encoded_script = base64.b64encode(monitor_script.encode()).decode()
         await self.docker_manager.exec_command(
             f"echo '{encoded_script}' | base64 -d > /tmp/filesystem_monitor.py"
@@ -96,128 +81,17 @@ class FilesystemWatcher:
             f"nohup python3 /tmp/filesystem_monitor.py {self.watch_path} > /tmp/fs_monitor.log 2>&1 &"
         )
 
-    def _get_monitor_script(self) -> str:
-        """Get the Python script that will run inside the container to monitor filesystem changes."""
-        return '''#!/usr/bin/env python3
-import sys
-import json
-import time
-import os
-from pathlib import Path
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-
-class ContainerFileSystemHandler(FileSystemEventHandler):
-    def __init__(self, output_file="/tmp/fs_events.jsonl"):
-        self.output_file = output_file
-        # Debounce rapid-fire events
-        self.recent_events = {}
-        self.debounce_time = 0.1  # 100ms debounce
-
-    def _should_ignore_path(self, path):
-        """Ignore certain paths that we don't want to monitor."""
-        ignore_patterns = [
-            '/.git/',
-            '__pycache__',
-            '.pyc',
-            '.tmp',
-            '/tmp/',
-            'fs_events.jsonl',
-            'filesystem_monitor.py',
-            'fs_monitor.log'
-        ]
-        
-        for pattern in ignore_patterns:
-            if pattern in path:
-                return True
-        return False
-
-    def _is_directory(self, path):
-        """Check if path is a directory."""
-        try:
-            return os.path.isdir(path)
-        except:
-            # If we can't stat it, check if it has an extension
-            return '.' not in os.path.basename(path)
-
-    def _write_event(self, event_type, src_path, dest_path=None):
-        """Write event to output file."""
-        if self._should_ignore_path(src_path):
-            return
-            
-        # Debounce events
-        event_key = f"{event_type}:{src_path}"
-        current_time = time.time()
-        
-        if event_key in self.recent_events:
-            if current_time - self.recent_events[event_key] < self.debounce_time:
-                return
-        
-        self.recent_events[event_key] = current_time
-
-        event_data = {
-            "type": "filesystem_change",
-            "event_type": event_type,
-            "src_path": src_path,
-            "is_directory": self._is_directory(src_path),
-            "timestamp": current_time
-        }
-        
-        if dest_path:
-            event_data["dest_path"] = dest_path
-            event_data["dest_is_directory"] = self._is_directory(dest_path)
+    def _load_monitor_script(self) -> str:
+        """Load the monitoring script from the external file."""
+        script_path = Path(__file__).parent / "filesystem_monitor.py"
 
         try:
-            with open(self.output_file, 'a') as f:
-                f.write(json.dumps(event_data) + '\\n')
-                f.flush()
+            with open(script_path, "r") as f:
+                return f.read()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Monitoring script not found at {script_path}")
         except Exception as e:
-            print(f"Error writing event: {e}", file=sys.stderr)
-
-    def on_created(self, event):
-        if not event.is_directory:
-            self._write_event("created", event.src_path)
-        else:
-            self._write_event("created", event.src_path)
-
-    def on_deleted(self, event):
-        self._write_event("deleted", event.src_path)
-
-    def on_modified(self, event):
-        if not event.is_directory:  # Only track file modifications
-            self._write_event("modified", event.src_path)
-
-    def on_moved(self, event):
-        self._write_event("moved", event.src_path, event.dest_path)
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: filesystem_monitor.py <watch_path>")
-        sys.exit(1)
-    
-    watch_path = sys.argv[1]
-    
-    # Clear any existing events file
-    try:
-        os.remove("/tmp/fs_events.jsonl")
-    except:
-        pass
-    
-    event_handler = ContainerFileSystemHandler()
-    observer = Observer()
-    observer.schedule(event_handler, watch_path, recursive=True)
-    
-    observer.start()
-    print(f"Monitoring filesystem changes in {watch_path}")
-    
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    
-    observer.join()
-'''
+            raise Exception(f"Failed to load monitoring script: {e}")
 
     def mark_operation_pending(self, operation_type: str, path: str):
         """Mark an operation as pending to avoid feedback loops."""
@@ -229,7 +103,6 @@ if __name__ == "__main__":
 
     async def _remove_pending_operation(self, operation_key: str):
         """Remove a pending operation after timeout."""
-        await asyncio.sleep(self.operation_timeout)
         self.pending_operations.discard(operation_key)
 
     def _is_self_initiated(self, event_type: str, path: str) -> bool:
