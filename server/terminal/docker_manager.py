@@ -255,6 +255,9 @@ class DockerManager:
     async def stop_container(self) -> None:
         """Stop and remove the container."""
         if self.container_id:
+            # Notify any filesystem watchers that the container is stopping
+            self._notify_container_stopping()
+
             try:
                 proc = await asyncio.create_subprocess_exec(
                     "docker",
@@ -278,3 +281,14 @@ class DockerManager:
                 pass
 
             self.container_id = None
+
+    def _notify_container_stopping(self):
+        """Notify components that the container is stopping."""
+        # This is a simple approach - in a more complex system you might use observers
+        # For now, we'll add a reference to filesystem watcher when it's created
+        if hasattr(self, "_filesystem_watcher") and self._filesystem_watcher:
+            self._filesystem_watcher.mark_container_stopping()
+
+    def set_filesystem_watcher(self, watcher):
+        """Set reference to filesystem watcher for stop notifications."""
+        self._filesystem_watcher = watcher

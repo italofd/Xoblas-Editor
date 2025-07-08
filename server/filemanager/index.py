@@ -9,13 +9,27 @@ class FileManager:
         self.docker_manager = docker_manager
         self.filesystem_watcher = FilesystemWatcher(docker_manager)
 
+        # Set up the connection between docker manager and filesystem watcher
+        self.docker_manager.set_filesystem_watcher(self.filesystem_watcher)
+
     async def start_filesystem_watcher(self, websocket_callback):
         """Start the bidirectional filesystem watcher."""
-        self.filesystem_watcher.set_websocket_callback(websocket_callback)
-        await self.filesystem_watcher.start_watching()
+        # Reset container state in case of reconnection
+        self.filesystem_watcher.reset_container_state()
 
-        # Start polling for changes in background
-        asyncio.create_task(self.filesystem_watcher.poll_for_changes())
+        try:
+            self.filesystem_watcher.set_websocket_callback(websocket_callback)
+            await self.filesystem_watcher.start_watching()
+
+            # Start polling for changes in background
+            asyncio.create_task(self.filesystem_watcher.poll_for_changes())
+        except Exception as e:
+            print(f"Failed to start filesystem watcher: {e}")
+            # If it fails due to container stopping, we don't want to raise
+            if "not available" in str(e):
+                print("Container is stopping - filesystem watcher will not start")
+            else:
+                raise
 
     async def stop_filesystem_watcher(self):
         """Stop the filesystem watcher."""

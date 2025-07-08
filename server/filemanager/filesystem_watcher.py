@@ -18,6 +18,9 @@ class FilesystemWatcher:
         self.websocket = None
         self.is_running = False
 
+        # Track container stopping state
+        self.is_container_stopping = False
+
         # Track operations initiated by the webapp to avoid feedback loops
         self.pending_operations: Set[str] = set()
 
@@ -28,10 +31,21 @@ class FilesystemWatcher:
         """Set the callback function for sending messages to the webapp."""
         self.send_callback = callback
 
+    def is_container_available(self) -> bool:
+        """Check if container is available (running and not stopping)."""
+        return (
+            not self.is_container_stopping
+            and self.docker_manager.is_container_running()
+        )
+
     async def start_watching(self):
         """Start the filesystem watcher inside the Docker container."""
         if self.is_running:
             return
+
+        # Check if container is available before starting
+        if not self.is_container_available():
+            raise Exception("Container is not available (stopped or stopping)")
 
         try:
             # Ensure the watch directory exists in the container
@@ -52,18 +66,36 @@ class FilesystemWatcher:
         if not self.is_running:
             return
 
+        # Mark that we're stopping (not the container, just the watcher)
+        self.is_running = False
+
         try:
-            # Stop the watcher process in the container
-            await self.docker_manager.exec_command(
-                "pkill -f 'python.*filesystem_monitor.py'"
-            )
-            self.is_running = False
+            # Stop the watcher process in the container only if container is still available
+            if self.is_container_available():
+                await self.docker_manager.exec_command(
+                    "pkill -f 'python.*filesystem_monitor.py'"
+                )
             print("Filesystem watcher stopped")
         except Exception as e:
             print(f"Error stopping filesystem watcher: {e}")
 
+    def mark_container_stopping(self):
+        """Mark the container as stopping to prevent new operations."""
+        self.is_container_stopping = True
+        self.is_running = False
+        print("Container marked as stopping - filesystem watcher disabled")
+
+    def reset_container_state(self):
+        """Reset container state for potential reconnection."""
+        self.is_container_stopping = False
+        print("Container state reset - ready for reconnection")
+
     async def _start_container_watcher(self):
         """Start the watcher script inside the container."""
+        # Double-check container availability before proceeding
+        if not self.is_container_available():
+            raise Exception("Container became unavailable during watcher startup")
+
         # Read the monitoring script from the external file
         monitor_script = self._load_monitor_script()
 
@@ -103,6 +135,7 @@ class FilesystemWatcher:
 
     async def _remove_pending_operation(self, operation_key: str):
         """Remove a pending operation after timeout."""
+        await asyncio.sleep(2.0)  # Wait 2 seconds before removing
         self.pending_operations.discard(operation_key)
 
     def _is_self_initiated(self, event_type: str, path: str) -> bool:
@@ -117,6 +150,12 @@ class FilesystemWatcher:
 
         while self.is_running:
             try:
+                # Check if container is still available before polling
+                if not self.is_container_available():
+                    print("Container no longer available - stopping filesystem polling")
+                    self.is_running = False
+                    break
+
                 # Check if events file exists and has new content
                 stdout, stderr = await self.docker_manager.exec_command(
                     f"test -f {events_file} && wc -c < {events_file} || echo 0"
@@ -142,6 +181,11 @@ class FilesystemWatcher:
 
             except Exception as e:
                 print(f"Error polling for filesystem changes: {e}")
+                # Check if this might be due to container stopping
+                if not self.is_container_available():
+                    print("Container stopped during polling - exiting")
+                    self.is_running = False
+                    break
                 await asyncio.sleep(1)
 
     async def _process_events(self, events_data: str):
