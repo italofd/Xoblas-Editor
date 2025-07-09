@@ -34,8 +34,6 @@ export const useLSP = () => {
     webSocket.addEventListener("message", (event: MessageEvent<string>) => {
       const data = JSON.parse(event.data);
 
-      console.log("EVASOCKET02: message received", data);
-
       if (data.type === "supported_languages") return setSupportedLanguages(data.languages);
 
       const callback = requestCallbacks.current.get(data.type);

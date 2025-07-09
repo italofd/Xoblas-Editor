@@ -36,7 +36,6 @@ class PythonLSPController(BaseLSPController):
         return ["pylsp"]
 
     def get_initialization_options(self) -> Dict[str, Any]:
-        print("EVA0passou agui")
         return {
             "plugins": {
                 "pylsp_mypy": {"enabled": True},

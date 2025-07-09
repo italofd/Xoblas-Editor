@@ -1,8 +1,10 @@
 from fastapi import WebSocket, APIRouter
 from typing import Dict
 from terminal.xoblas_editor import XoblasEditor
+from terminal.docker_manager import DockerManager
 import json
 import re
+import uuid
 
 
 # Dictionary to store active terminal sessions
@@ -26,8 +28,14 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
     # This is to not break docker volume name pattern
     sanitized = re.sub(r"[^a-z0-9_.-]", "-", user_id)
 
+    # Generate unique connection ID for this WebSocket
+    connection_id = f"terminal_{uuid.uuid4().hex[:8]}"
+
     try:
         await websocket.accept()
+
+        # Register this connection
+        DockerManager.register_connection(sanitized, connection_id)
 
         # Create and start a new PTY shell session
         editor = XoblasEditor(user_id=sanitized)
@@ -107,9 +115,14 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
     except Exception as e:
         print(f"Terminal error: {e}")
-        await editor.close()
+        pass
 
     finally:
-        # Clean up the shell session
+        # Unregister this connection
+        DockerManager.unregister_connection(sanitized, connection_id)
+
+        # Clean up the terminal session from our local tracking
         if session_id in active_terminals:
-            await editor.close()
+            del active_terminals[session_id]
+
+        print(f"Terminal WebSocket disconnected for user: {sanitized}")

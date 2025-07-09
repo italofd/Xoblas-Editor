@@ -33,11 +33,8 @@ class XoblasEditor:
 
     async def start(self) -> None:
         """Start the PTY shell session in a Docker container."""
-        # Build the Docker image
-        await self.docker.build_image()
-
-        # Start the container
-        container_id = await self.docker.start_container()
+        # Ensure container is running (this will build image and start container if needed)
+        container_id = await self.docker.ensure_container_running()
 
         # Clean vim file listeners (lockers)
         await self.docker.cleanup_vim_locks()
@@ -247,9 +244,10 @@ class XoblasEditor:
         return await self.file_manager.read_file(file_path)
 
     async def close(self) -> None:
-        """Close the PTY shell session and clean up Docker resources."""
+        """Close the PTY shell session without stopping the Docker container."""
         # Close the PTY
         self.pty.close()
 
-        # Stop and remove the Docker container
-        await self.docker.stop_container()
+        # Note: We no longer stop the container here since it's managed by DockerManager
+        # The container will be stopped when all connections are closed
+        print(f"Closed XoblasEditor for user {self.user_id}")

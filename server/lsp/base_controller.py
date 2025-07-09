@@ -35,9 +35,8 @@ class BaseLSPController(ABC):
     async def start(self) -> bool:
         """Start the LSP server"""
         try:
-            # Ensure container is running
-            if not self.docker.is_container_running():
-                await self.docker.start_container()
+            # Ensure container is running with proper synchronization
+            await self.docker.ensure_container_running()
 
             # Install LSP server if needed
             if not await self.install_lsp_server():
@@ -66,6 +65,7 @@ class BaseLSPController(ABC):
             return False
 
     async def _initialize(self):
+        # [TO-DO]: Confirm if this is still available after implementing vscode-api, i think this is already done by default on the protocol
         """Send LSP initialize request"""
         # In your _initialize method
         init_request = {
@@ -152,99 +152,6 @@ class BaseLSPController(ABC):
         """Get next request ID"""
         self.request_id += 1
         return self.request_id
-
-    async def completion(
-        self, file_path: str, line: int, character: int, text: str
-    ) -> Dict[str, Any]:
-        """Get completions"""
-        # Send textDocument/didOpen if needed
-        await self._did_open(file_path, text)
-
-        request = {
-            "jsonrpc": "2.0",
-            "id": self._next_id(),
-            "method": "textDocument/completion",
-            "params": {
-                "textDocument": {"uri": f"file://{file_path}"},
-                "position": {"line": line, "character": character},
-            },
-        }
-
-        await self._send_request(request)
-        return await self._read_response()
-
-    async def hover(
-        self, file_path: str, line: int, character: int, text: str
-    ) -> Dict[str, Any]:
-        """Get hover information"""
-        await self._did_open(file_path, text)
-
-        request = {
-            "jsonrpc": "2.0",
-            "id": self._next_id(),
-            "method": "textDocument/hover",
-            "params": {
-                "textDocument": {"uri": f"file://{file_path}"},
-                "position": {"line": line, "character": character},
-            },
-        }
-
-        await self._send_request(request)
-        return await self._read_response()
-
-    async def diagnostics(self, file_path: str, text: str) -> List[Dict[str, Any]]:
-        """Get diagnostics - they come automatically after didChange"""
-        await self._sync_document(file_path, text)
-
-        # Diagnostics are typically sent as notifications, not responses
-        # You might need to implement a background reader for notifications
-        diagnostics = []
-
-        # Read any pending diagnostic notifications
-        while True:
-            try:
-                response = await asyncio.wait_for(self._read_response(), timeout=0.1)
-                if (
-                    response
-                    and response.get("method") == "textDocument/publishDiagnostics"
-                ):
-                    diagnostics.append(response)
-                else:
-                    break
-            except asyncio.TimeoutError:
-                break
-
-        return diagnostics
-
-    async def _sync_document(self, file_path: str, text: str):
-        """Sync document content with LSP server"""
-        uri = f"file://{file_path}"
-
-        if uri not in self.open_documents:
-            # First time - send didOpen
-            await self._did_open(file_path, text)
-            self.open_documents[uri] = text
-            self.document_versions[uri] = 1
-        elif self.open_documents[uri] != text:
-            # Content changed - send didChange
-            await self._did_change(file_path, text)
-            self.open_documents[uri] = text
-            self.document_versions[uri] += 1
-
-    async def _did_change(self, file_path: str, text: str):
-        """Send textDocument/didChange notification"""
-        uri = f"file://{file_path}"
-        version = self.document_versions.get(uri, 1)
-
-        request = {
-            "jsonrpc": "2.0",
-            "method": "textDocument/didChange",
-            "params": {
-                "textDocument": {"uri": uri, "version": version},
-                "contentChanges": [{"text": text}],  # Full document sync
-            },
-        }
-        await self._send_request(request)
 
     async def _did_open(self, file_path: str, text: str):
         """Send textDocument/didOpen notification"""

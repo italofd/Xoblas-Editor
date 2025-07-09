@@ -2,7 +2,9 @@ from fastapi import WebSocket, APIRouter
 import json
 import re
 import asyncio
+import uuid
 from lsp.manager import lsp_manager
+from terminal.docker_manager import DockerManager
 
 
 router = APIRouter(
@@ -18,8 +20,14 @@ async def ws_lsp(websocket: WebSocket, user_id: str):
     # Sanitize user_id for Docker compatibility
     sanitized_user_id = re.sub(r"[^a-z0-9_.-]", "-", user_id.lower())
 
+    # Generate unique connection ID for this WebSocket
+    connection_id = f"lsp_{uuid.uuid4().hex[:8]}"
+
     try:
         await websocket.accept()
+
+        # Register this connection
+        DockerManager.register_connection(sanitized_user_id, connection_id)
 
         # Get or create LSP instance for this user
         lsp = await lsp_manager.get_or_create_lsp(sanitized_user_id, "python")
@@ -38,8 +46,6 @@ async def ws_lsp(websocket: WebSocket, user_id: str):
             while True:
                 data = await websocket.receive_text()
 
-                print(f"Received message: {data}")
-
                 # Send the raw message to the LSP server
                 if lsp.process and lsp.process.stdin:
                     try:
@@ -55,7 +61,6 @@ async def ws_lsp(websocket: WebSocket, user_id: str):
                         # Send to LSP server
                         lsp.process.stdin.write(message.encode())
 
-                        print(f"Sent message: {message}")
                         await lsp.process.stdin.drain()
                     except json.JSONDecodeError:
                         await websocket.send_json(
@@ -73,6 +78,9 @@ async def ws_lsp(websocket: WebSocket, user_id: str):
         print(f"LSP WebSocket error: {e}")
 
     finally:
+        # Unregister this connection
+        DockerManager.unregister_connection(sanitized_user_id, connection_id)
+
         # Clean up LSPs for this user when disconnecting
         await lsp_manager.close_all_user_lsps(sanitized_user_id)
 

@@ -6,7 +6,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-from routers import ping, execute, get_outputs, web_socket, lsp_socket
+from routers import (
+    web_socket,
+    lsp_socket,
+    filesystem_socket,
+)
 
 
 load_dotenv()
@@ -34,11 +38,9 @@ app.add_middleware(
 )
 
 
-app.include_router(ping.router)
-app.include_router(execute.router)
-app.include_router(get_outputs.router)
 app.include_router(web_socket.router)
 app.include_router(lsp_socket.router)
+app.include_router(filesystem_socket.router)
 
 
 @app.get("/")
