@@ -36,7 +36,7 @@ async function isDirectory(uri: vscode.Uri, operation: FileOperationType): Promi
   try {
     const stat = await vscode.workspace.fs.stat(uri);
     return (stat.type & vscode.FileType.Directory) !== 0;
-  } catch (error) {
+  } catch {
     // If stat fails, assume it's a directory (no extension)
     return true;
   }
@@ -56,8 +56,8 @@ async function readFileContent(uri: vscode.Uri): Promise<FileContentResult> {
       const content = btoa(String.fromCharCode(...data));
       return { content, contentType: "binary" };
     }
-  } catch (error) {
-    console.error(`Error reading file content for ${uri.fsPath}:`, error);
+  } catch {
+    console.error(`Error reading file content for ${uri.fsPath}`);
     return {};
   }
 }
@@ -266,7 +266,7 @@ async function applyContainerChangeToWorkspace(
         try {
           // VS Code delete with recursive=true handles everything
           await vscode.workspace.fs.delete(uri, { recursive: true, useTrash: false });
-        } catch (error) {
+        } catch {
           console.log(`File already deleted: ${workspacePath}`);
         }
         break;
