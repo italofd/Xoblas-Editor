@@ -9,6 +9,7 @@ from typing import Annotated
 router = APIRouter()
 
 
+# Deprecated, not in use, just a piece of history =)
 @router.post(
     "/get_outputs",
     tags=["outputs"],

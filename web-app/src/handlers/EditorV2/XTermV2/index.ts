@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import { getServerURL } from "@/utils/getServerURL";
 import { TrackAnonymous } from "@/handlers/tracking";
 import { isCommandMessage, isFileMessage, isXoblasMessage } from "@/types/socket";
-import { TerminalInputHandler } from "@/handlers/XTermV2/handlers";
+import { TerminalInputHandler } from "@/handlers/EditorV2/XTermV2/handlers";
 
 export class XTerm extends SimpleTerminalBackend {
   private socket: WebSocket | null = null;
@@ -116,7 +116,7 @@ export class XTerm extends SimpleTerminalBackend {
       }
     }
 
-    const process = new XTermProcess(1, "/workspace", dataEmitter.event, this);
+    const process = new XTermProcess(1, "/home/termuser/root", dataEmitter.event, this);
     return process;
   };
 
@@ -158,7 +158,7 @@ export class XTerm extends SimpleTerminalBackend {
   ) {
     if (this.socket) return;
 
-    console.log("Initializing websocket");
+    console.log("Initializing Terminal WebSocket");
 
     const tracker = new TrackAnonymous();
 
@@ -167,7 +167,7 @@ export class XTerm extends SimpleTerminalBackend {
     );
 
     webSocket.addEventListener("open", () => {
-      console.log("WebSocket connected");
+      console.log("Terminal WebSocket connected");
       dataEmitter.fire("Terminal connected!\r\n");
       this.socket = webSocket;
     });
@@ -176,7 +176,6 @@ export class XTerm extends SimpleTerminalBackend {
       if (event.data) {
         try {
           const parsedJson = JSON.parse(event.data);
-          console.log("Terminal received:", parsedJson);
 
           if (!parsedJson) return;
 
@@ -194,6 +193,10 @@ export class XTerm extends SimpleTerminalBackend {
               propertyEmitter.fire({
                 type: "title",
                 value: `${parsedJson.user}@${parsedJson.host}`,
+              });
+              propertyEmitter.fire({
+                type: "cwd",
+                value: parsedJson.cwd,
               });
             }
 

@@ -7,23 +7,19 @@ import { WorkerLoader } from "monaco-languageclient/workerFactory";
 
 import { LSPConnection } from "@/hooks/useLSPConnection";
 
-import { createAndStartLanguageClient } from "@/handlers/XTermV2/config";
-import { createAndInitializeWrapper } from "@/handlers/XTermV2/config";
-import { setupFileSystemProvider } from "@/handlers/XTermV2/config";
+import { createAndStartLanguageClient } from "@/handlers/EditorV2/config";
+import { createAndInitializeWrapper } from "@/handlers/EditorV2/config";
+import { setupFileSystemProvider } from "@/handlers/EditorV2/config";
+import { fileSystemWatcher } from "@/handlers/EditorV2/fileSystem";
 
 import "@codingame/monaco-vscode-python-default-extension";
 import "@codingame/monaco-vscode-theme-defaults-default-extension";
 import "vscode/localExtensionHost";
-import { fileSystemWatcher } from "@/handlers/XTermV2/fileSystem";
 
 // Define Props for the Editor
 export interface CustomMonacoEditorProps {
-  initialCode?: string;
-  languageId?: string;
-  theme?: string;
-  editorOptions?: monaco.editor.IStandaloneEditorConstructionOptions;
-  onCodeChange?: (code: string, event: monaco.editor.IModelContentChangedEvent) => void;
   lspConnection: LSPConnection;
+  setIsVsCodeReady: (isReady: boolean) => void;
 }
 
 const imptUrl = import.meta.url;
@@ -50,7 +46,6 @@ const workerLoaders: Partial<Record<string, WorkerLoader>> = {
 
 window.MonacoEnvironment = {
   getWorker: function (_moduleId, label) {
-    console.log("getWorker", _moduleId, label);
     const workerFactory = workerLoaders[label];
     if (workerFactory != null) {
       return workerFactory();
@@ -59,14 +54,7 @@ window.MonacoEnvironment = {
   },
 };
 
-export const EditorV2 = ({
-  initialCode = "# Start coding here!",
-  languageId = "python",
-  theme = "vs-dark",
-  editorOptions,
-  onCodeChange,
-  lspConnection,
-}: CustomMonacoEditorProps) => {
+export const EditorV2 = ({ lspConnection, setIsVsCodeReady }: CustomMonacoEditorProps) => {
   const editorContainerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<MonacoEditorLanguageClientWrapper | null>(null);
   const editorInstanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -76,6 +64,7 @@ export const EditorV2 = ({
   // Initialize editor when LSP connection is ready
   useEffect(() => {
     // Skip if already initialized or if connection is not ready
+
     if (
       hasInitializedRef.current ||
       !editorContainerRef.current ||
@@ -101,13 +90,13 @@ export const EditorV2 = ({
         // Create and initialize wrapper
         const newWrapper = await createAndInitializeWrapper(
           workspaceRoot,
-          initialCode,
+          "",
           editorContainerRef.current!,
         );
         wrapperRef.current = newWrapper;
 
         // Create and start language client
-        const languageClient = await createAndStartLanguageClient(languageId, lspConnection);
+        const languageClient = await createAndStartLanguageClient("python", lspConnection);
         languageClientRef.current = languageClient;
       } catch (error) {
         console.error("Failed to initialize or start Monaco Editor wrapper:", error);
@@ -120,7 +109,7 @@ export const EditorV2 = ({
     };
 
     initEditor().then(() => {
-      fileSystemWatcher();
+      fileSystemWatcher(setIsVsCodeReady);
     });
 
     return () => {
@@ -146,7 +135,7 @@ export const EditorV2 = ({
         wrapperRef.current = null;
       }
     };
-  }, [lspConnection, initialCode, languageId, theme, editorOptions, onCodeChange]);
+  }, [lspConnection]);
 
   if (lspConnection.error) {
     return (

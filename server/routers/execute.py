@@ -12,6 +12,7 @@ from routers.constants.messages import message_has_not_output, message_has_outpu
 router = APIRouter()
 
 
+# Deprecated, not in use, just a piece of history =)
 @router.post(
     "/execute",
     tags=["execute"],

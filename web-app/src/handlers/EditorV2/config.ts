@@ -47,7 +47,7 @@ import getFileServiceOverride, {
 import getStorageServiceOverride from "@codingame/monaco-vscode-storage-service-override";
 import getSecretStorageServiceOverride from "@codingame/monaco-vscode-secret-storage-service-override";
 import getTerminalServiceOverride from "@codingame/monaco-vscode-terminal-service-override";
-import { XTerm } from "@/handlers/XTermV2";
+import { XTerm } from "@/handlers/EditorV2/XTermV2";
 import { MonacoEditorLanguageClientWrapper } from "monaco-editor-wrapper";
 import { LSPConnection } from "@/hooks/useLSPConnection";
 import { MonacoLanguageClient } from "monaco-languageclient";
@@ -98,8 +98,7 @@ export const createAndInitializeWrapper = async (
             return true;
           },
           workspace: {
-            folderUri: vscode.Uri.file("/home/termuser"),
-            // workspaceUri: vscode.Uri.file("/xoblas.code-workspace"),
+            folderUri: vscode.Uri.file("/home/termuser/root"),
           },
         },
         productConfiguration: {
