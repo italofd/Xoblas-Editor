@@ -115,7 +115,7 @@ async def ws_terminal(websocket: WebSocket, user_id: str):
 
     except Exception as e:
         print(f"Terminal error: {e}")
-        # Don't close the editor here - let the cleanup be handled by connection management
+        pass
 
     finally:
         # Unregister this connection

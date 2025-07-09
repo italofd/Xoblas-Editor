@@ -98,7 +98,7 @@ export const createAndInitializeWrapper = async (
             return true;
           },
           workspace: {
-            folderUri: vscode.Uri.file("/home"),
+            folderUri: vscode.Uri.file("/home/termuser"),
             // workspaceUri: vscode.Uri.file("/xoblas.code-workspace"),
           },
         },

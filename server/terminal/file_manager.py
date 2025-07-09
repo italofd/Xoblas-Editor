@@ -31,6 +31,6 @@ class FileManager:
         stdout, stderr = await self.docker_manager.exec_command(f"cat {file_path}")
 
         if stderr:
-            raise Exception(f"Error reading file: {stderr.decode()}")
+            return stderr.decode()
 
         return stdout.decode()

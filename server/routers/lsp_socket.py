@@ -46,8 +46,6 @@ async def ws_lsp(websocket: WebSocket, user_id: str):
             while True:
                 data = await websocket.receive_text()
 
-                print(f"Received message: {data}")
-
                 # Send the raw message to the LSP server
                 if lsp.process and lsp.process.stdin:
                     try:
@@ -63,7 +61,6 @@ async def ws_lsp(websocket: WebSocket, user_id: str):
                         # Send to LSP server
                         lsp.process.stdin.write(message.encode())
 
-                        print(f"Sent message: {message}")
                         await lsp.process.stdin.drain()
                     except json.JSONDecodeError:
                         await websocket.send_json(

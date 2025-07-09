@@ -52,7 +52,6 @@ class DockerManager:
     def get_or_create(cls, user_id: str, config: TerminalConfig) -> "DockerManager":
         existing = docker_sessions.get(user_id)
 
-        print("EVA01", existing)
         if existing is not None:
             return existing
 

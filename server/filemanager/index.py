@@ -103,7 +103,6 @@ class FileManager:
 
     async def _handle_create(self, path: str, is_directory: bool) -> Dict:
         """Handle file/directory creation."""
-        print(f"EVA01 Creating file/directory: {path}, is_directory: {is_directory}")
         if is_directory:
             _, stderr = await self.docker_manager.exec_command(f"mkdir -p '{path}'")
         else:

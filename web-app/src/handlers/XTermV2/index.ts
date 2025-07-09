@@ -158,6 +158,8 @@ export class XTerm extends SimpleTerminalBackend {
   ) {
     if (this.socket) return;
 
+    console.log("Initializing websocket");
+
     const tracker = new TrackAnonymous();
 
     const webSocket = new WebSocket(
@@ -167,6 +169,7 @@ export class XTerm extends SimpleTerminalBackend {
     webSocket.addEventListener("open", () => {
       console.log("WebSocket connected");
       dataEmitter.fire("Terminal connected!\r\n");
+      this.socket = webSocket;
     });
 
     webSocket.addEventListener("message", (event: MessageEvent<string>) => {
@@ -224,6 +227,7 @@ export class XTerm extends SimpleTerminalBackend {
     webSocket.addEventListener("error", (error) => {
       console.error("WebSocket error:", error);
       dataEmitter.fire("Terminal connection error\r\n");
+      this.socket = null;
     });
 
     webSocket.addEventListener("close", () => {
@@ -233,7 +237,5 @@ export class XTerm extends SimpleTerminalBackend {
       this.isEnvReady = false;
       this.inputHandler.reset();
     });
-
-    this.socket = webSocket;
   }
 }

@@ -68,8 +68,6 @@ async function processFileOperation(
 
         const isDir = await isDirectory(uri, operation);
 
-        console.log("EVA01 IsDirectory:", isDir);
-
         return {
           path: uri.fsPath,
           isDirectory: isDir,

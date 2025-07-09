@@ -31,14 +31,6 @@ export const sendLSPRequest = (
         type,
       }),
     );
-
-    // // Timeout after 5 seconds
-    // setTimeout(() => {
-    //   if (requestCallbacks.has(type)) {
-    //     requestCallbacks.delete(type);
-    //     reject(new Error("LSP request timeout"));
-    //   }
-    // }, REQUEST_TIMEOUT);
   });
 };
 
@@ -47,7 +39,6 @@ export const getCompletions = async (
   params: LSPRequestParams,
 ): Promise<LSPCompletionItem[]> => {
   try {
-    console.log("EVA0COMPLETION", params);
     const result = await sendRequest("completion", {
       type: "completion",
       language: params.language,
